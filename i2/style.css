@@ -1,0 +1,71 @@
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #121218;
+    color: #ffffff;
+}
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+.hero-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.name {
+    font-size: 3rem; /* Adjust size as needed */
+    font-weight: 700;
+    background: -webkit-linear-gradient(left, #6a82fb, #a777e3);
+    background: linear-gradient(to right, #6a82fb, #a777e3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    font-size: 1rem; /* Adjust size as needed */
+    font-weight: 400;
+    color: #a0a0a0;
+}
+
+.arrow-container {
+    padding-bottom: 2rem;
+}
+
+.arrow {
+    font-size: 2rem;
+    color: #a0a0a0;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.arrow:hover {
+    color: #ffffff;
+}
+
+/* For smaller screens */
+@media (max-width: 768px) {
+    .name {
+        font-size: 2rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+}
