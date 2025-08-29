@@ -177,3 +177,175 @@ background-position: 100% 50%;
     align-items: center;
     border-top: 1px solid #2d2f41;
 }
+
+
+/*cONTACT*/
+/* Terminal Contact Styles */
+#contact {
+    background: #1a1a1a;
+    padding: 40px;
+    flex-direction: column;
+}
+
+.terminal-window {
+    background: #2a2d3a;
+    border-radius: 12px;
+    padding: 0;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.terminal-header {
+    background: #383b4a;
+    padding: 12px 20px;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.terminal-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.terminal-button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.terminal-button.red { background: #ff5f57; }
+.terminal-button.yellow { background: #ffbd2e; }
+.terminal-button.green { background: #28ca42; }
+
+.terminal-content {
+    padding: 30px;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+}
+
+.terminal-line {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.terminal-prompt {
+    color: #4ade80;
+    margin-right: 8px;
+}
+
+.terminal-command {
+    color: #4ade80;
+    margin-right: 8px;
+}
+
+.terminal-flag {
+    color: #60a5fa;
+}
+
+.terminal-title {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 20px 0 30px 0;
+}
+
+.contact-info {
+    margin-left: 24px;
+    margin-bottom: 30px;
+}
+
+.location-icon {
+    color: #4ade80;
+    margin-right: 8px;
+}
+
+.email-box {
+    background: #1f2937;
+    border: 1px solid #4ade80;
+    padding: 8px 16px;
+    border-radius: 4px;
+    color: #ffffff;
+    display: inline-block;
+    margin-left: 24px;
+    margin-bottom: 30px;
+}
+
+.download-btn {
+    background: #4ade80;
+    color: #1a1a1a;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 24px;
+    margin-bottom: 30px;
+    transition: background-color 0.3s ease;
+}
+
+.download-btn:hover {
+    background: #22c55e;
+}
+
+.social-links {
+    display: flex;
+    gap: 20px;
+    margin-left: 24px;
+}
+
+.social-link {
+    background: #374151;
+    padding: 16px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background-color 0.3s ease;
+    flex: 1;
+    min-width: 140px;
+}
+
+.social-link:hover {
+    background: #4b5563;
+}
+
+.social-icon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.social-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.social-platform {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.social-handle {
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .social-links {
+        flex-direction: column;
+    }
+    
+    .terminal-window {
+        margin: 0 20px;
+    }
+}
+
+
+
