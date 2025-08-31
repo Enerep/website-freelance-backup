@@ -1,0 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.sidebar {
+    background-color: #fff;
+    width: 35%;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-right: 1px solid #e9ecef;
+}
+
+.profile-photo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 20px;
+}
+
+.name {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #6c757d;
+    margin: 5px 0 15px;
+}
+
+.summary {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #495057;
+    margin-bottom: 30px;
+}
+
+.contact-info {
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    font-size: 15px;
+}
+
+.contact-item i {
+    margin-right: 10px;
+    color: #6c757d;
+}
+
+.contact-item a, .contact-item span {
+    color: #495057;
+    text-decoration: none;
+}
+
+.contact-item a:hover {
+    text-decoration: underline;
+}
+
+.social-links a {
+    font-size: 24px;
+    color: #495057;
+    margin: 0 10px;
+    transition: color 0.3s;
+}
+
+.social-links a:hover {
+    color: #007bff;
+}
+
+.main-content {
+    width: 65%;
+    padding: 40px;
+}
+
+h3 {
+    font-size: 22px;
+    font-weight: 700;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+}
+
+.skills-category {
+    margin-bottom: 30px;
+}
+
+.skills-category h4 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.skills-category h4 i {
+    margin-right: 10px;
+    color: #6c757d;
+}
+
+.skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.skills-list span {
+    background-color: #e9ecef;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.experience .job {
+    margin-bottom: 30px;
+    padding-left: 20px;
+    border-left: 2px solid #e9ecef;
+    position: relative;
+}
+
+.experience .job::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    background-color: #adb5bd;
+    border-radius: 50%;
+}
+
+.job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.job h4 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.job .date {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.job h5 {
+    font-size: 16px;
+    font-weight: 500;
+    color: #495057;
+    margin: 0 0 10px;
+}
+
+.job p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #495057;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar, .main-content {
+        width: 100%;
+        padding: 30px;
+        box-sizing: border-box;
+    }
+
+    .sidebar {
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+    }
+}
+
+@media (max-width: 576px) {
+    .job-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .job .date {
+        margin-top: 5px;
+    }
+}
