@@ -26,6 +26,7 @@
 <body class="min-h-screen text-white bg-black">
 
 
+    
     <div id="orb-bg" class="fixed inset-0 -z-10 pointer-events-none">
         <div class="absolute top-1/4 left-1/4 w-[30rem] h-[30rem] bg-pink-500/30 rounded-full blur-[150px]"></div>
         <div class="absolute bottom-1/4 right-1/4 w-[26rem] h-[26rem] bg-blue-400/30 rounded-full blur-[150px]"></div>
@@ -85,8 +86,8 @@
 
     // Mouse parallax orbs (listen on document, not orb-bg)
     document.addEventListener("mousemove", (e) => {
-    const x = (e.clientX / window.innerWidth - 0.5) * 200;
-    const y = (e.clientY / window.innerHeight - 0.5) * 200;
+    const x = (e.clientX / window.innerWidth - 0.5) * 300;
+    const y = (e.clientY / window.innerHeight - 0.5) * 300;
     gsap.to("#orb-bg div:nth-child(1)", { x, y, duration: 0.6, ease: "power3.out" });
     gsap.to("#orb-bg div:nth-child(2)", { x: -x, y: -y, duration: 0.6, ease: "power3.out" });
     });
@@ -102,8 +103,8 @@
         const rect = card.getBoundingClientRect();
         const px = (e.x - rect.left) / rect.width;
         const py = (e.y - rect.top) / rect.height;
-        const rotateX = (py - 0.5) * 15;
-        const rotateY = (px - 0.5) * -15;
+        const rotateX = (py - 0.5) * 25;
+        const rotateY = (px - 0.5) * -25;
         gsap.to(inner, { rotateX, rotateY, scale: 1.03, duration: 0.3 });
         },
         onLeave: () => {
