@@ -9,7 +9,7 @@
 
 body {
     font-family: 'Montserrat', sans-serif;
-    background-color: #000000; 
+    background-color: #23272d; 
     color: white;
     display: flex;
     align-items: center;
@@ -17,6 +17,7 @@ body {
     min-height: 100vh;
     overflow: hidden;
 }
+
 
 
 

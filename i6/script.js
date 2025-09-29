@@ -6,7 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
     cards.forEach((card, index) => {
         setTimeout(() => {
             card.classList.add('is-visible');
-        }, 500 * (index + 1)); 
+        }, 600 * (index + 1)); 
     });
 
 });
+
+//console.log("test1");
