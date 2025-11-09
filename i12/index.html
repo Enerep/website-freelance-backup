@@ -1,0 +1,477 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio for Developer</title>
+
+
+
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 25%, #2d1b3d 50%, #1a2332 75%, #0f1419 100%);
+            color: #fff;
+            height: 100vh;
+        }
+
+
+
+        /*aimated gradient background */
+        .bg-gradient {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(88, 166, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(147, 51, 234, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 20%, rgba(167, 139, 250, 0.08) 0%, transparent 50%);
+            animation: gradientShift 20s ease infinite;
+            z-index: 1;
+        }
+
+
+
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-5%, 5%) rotate(90deg); }
+            50% { transform: translate(-10%, -5%) rotate(180deg); }
+            75% { transform: translate(5%, -10%) rotate(270deg); }
+        }
+
+
+
+
+        /* canvas for particles */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        /*flowing wind lines*/
+        .wind-line {
+            position: fixed;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(139, 195, 255, 0.4), transparent);
+            z-index: 3;
+            filter: blur(1px);
+        }
+
+        /*content container*/
+        .content {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        /*glass card effect*/
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 4rem 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 8px 32px 0 rgba(0, 0, 0, 0.37),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            max-width: 600px;
+            animation: cardFloat 6s ease-in-out infinite;
+            transform-style: preserve-3d;
+        }
+
+
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0px) rotateX(0deg) rotateY(0deg); }
+            25% { transform: translateY(-20px) rotateX(2deg) rotateY(-2deg); }
+            50% { transform: translateY(-10px) rotateX(-1deg) rotateY(2deg); }
+            75% { transform: translateY(-25px) rotateX(1deg) rotateY(-1deg); }
+        }
+
+        h1 {
+            font-size: 6rem;
+            font-weight: 300;
+            letter-spacing: 0.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #a8d8ff 0%, #c7b3ff 50%, #ffd4f4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: textFloat 4s ease-in-out infinite, textShimmer 3s ease-in-out infinite;
+            text-shadow: 0 0 40px rgba(168, 216, 255, 0.3);
+        }
+
+        @keyframes textFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes textShimmer {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+
+
+
+        .role {
+            font-size: 1.5rem;
+            letter-spacing: 0.3rem;
+            color: #8bc3ff;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            font-weight: 300;
+            opacity: 0.9;
+            animation: fadeInOut 3s ease-in-out infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .description {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+
+        .links {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .link-btn {
+            padding: 1rem 2.5rem;
+            background: rgba(139, 195, 255, 0.1);
+            border: 1px solid rgba(139, 195, 255, 0.3);
+            border-radius: 50px;
+            color: #8bc3ff;
+            text-decoration: none;
+            font-size: 1rem;
+            letter-spacing: 0.1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .link-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(139, 195, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .link-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .link-btn:hover {
+            transform: translateY(-5px);
+            border-color: rgba(139, 195, 255, 0.6);
+            box-shadow: 0 10px 30px rgba(139, 195, 255, 0.3);
+        }
+
+        .link-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /*floating orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.4;
+            z-index: 1;
+            animation: orbFloat 15s ease-in-out infinite;
+        }
+
+        .orb1 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(139, 195, 255, 0.4) 0%, transparent 70%);
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .orb2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.3) 0%, transparent 70%);
+            bottom: 10%;
+            right: 10%;
+            animation-delay: 5s;
+        }
+
+        .orb3 {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(147, 197, 253, 0.35) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            animation-delay: 2.5s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(50px, -50px); }
+            50% { transform: translate(-30px, 30px); }
+            75% { transform: translate(30px, 50px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 3rem; letter-spacing: 0.3rem; }
+            .role { font-size: 1.2rem; }
+            .card { padding: 3rem 2rem; }
+        }
+    </style>
+</head>
+
+
+
+<body>
+    <div class="bg-gradient"></div>
+    
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+    
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="content">
+        <div class="card">
+            <h1>Bat</h1>
+            <div class="role">Developer</div>
+            <p class="description">Some description here </p>
+            <div class="links">
+                <a href="mailto:hello@pta.dev" class="link-btn"><span>Email</span></a>
+                <a href="https://github.com/" class="link-btn"><span>GitHub</span></a>
+                <a href="https://linkedin.com/" class="link-btn"><span>LinkedIn</span></a>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        //particle system
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+        const particleCount = 150;
+
+
+
+
+        class Particle {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * canvas.height;
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = -10;
+                this.vx = Math.random() * 2 - 1;
+                this.vy = Math.random() * 3 + 1;
+                this.size = Math.random() * 3 + 1;
+                this.opacity = Math.random() * 0.5 + 0.2;
+                this.color = `rgba(${139 + Math.random() * 60}, ${195 + Math.random() * 40}, 255, ${this.opacity})`;
+                this.life = Math.random() * 200 + 100;
+                this.age = 0;
+                this.windInfluence = Math.random() * 0.5 + 0.5;
+            }
+
+
+
+            update() {
+                //mouse interaction
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const force = Math.min(100, 5000 / (distance + 1));
+                
+                this.vx += (dx / distance) * force * 0.01 * this.windInfluence;
+                this.vy += (dy / distance) * force * 0.01 * this.windInfluence;
+
+                //turbulence
+                this.vx += (Math.random() - 0.5) * 0.5;
+                this.vy += Math.sin(this.x * 0.01 + Date.now() * 0.001) * 0.3;
+
+                //velocity damping
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+
+                //update position
+                this.x += this.vx;
+                this.y += this.vy;
+
+                //aging
+                this.age++;
+                this.opacity = Math.sin((this.age / this.life) * Math.PI) * 0.7;
+
+                //reset if out of bounds or too old
+                if (this.y > canvas.height + 10 || this.x < -10 || this.x > canvas.width + 10 || this.age > this.life) {
+                    this.reset();
+                }
+            }
+
+
+
+
+
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color.replace(/[\d.]+\)$/g, `${this.opacity})`);
+                ctx.fill();
+
+                //glow effect
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // init particles
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        // anim loop
+        function animate() {
+            ctx.fillStyle = 'rgba(10, 14, 39, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            //connect nearby particles
+            particles.forEach((p1, i) => {
+                particles.slice(i + 1).forEach(p2 => {
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(139, 195, 255, ${(1 - distance / 100) * 0.2})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                });
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+
+        animate();
+
+
+
+
+
+        //mouse tracking
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        //touch tracking
+        window.addEventListener('touchmove', (e) => {
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+        });
+
+        //resize handler
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+
+
+        
+        // flow wind lines
+        function createWindLine() {
+            const line = document.createElement('div');
+            line.className = 'wind-line';
+            line.style.width = Math.random() * 300 + 100 + 'px';
+            line.style.top = Math.random() * window.innerHeight + 'px';
+            line.style.left = '-200px';
+            line.style.opacity = Math.random() * 0.5 + 0.3;
+            document.body.appendChild(line);
+
+            const duration = Math.random() * 3000 + 2000;
+            const startY = parseFloat(line.style.top);
+            const endY = startY + (Math.random() - 0.5) * 100;
+
+            line.animate([
+                { transform: 'translateX(0) translateY(0)', opacity: 0 },
+                { transform: `translateX(${window.innerWidth / 2}px) translateY(${(endY - startY) / 2}px)`, opacity: line.style.opacity },
+                { transform: `translateX(${window.innerWidth + 200}px) translateY(${endY - startY}px)`, opacity: 0 }
+            ], {
+                duration: duration,
+                easing: 'ease-in-out'
+            }).onfinish = () => line.remove();
+        }
+
+        setInterval(createWindLine, 600);
+    </script>
+
+
+
+</body>
+</html>
