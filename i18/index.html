@@ -1,0 +1,289 @@
+
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Portfolio</title>
+
+
+
+
+    <style>
+        :root {
+            --bg: #050505;
+            --accent: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* hide the real cursor globally */
+            cursor: none !important; 
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--accent);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+
+
+
+
+        /*the custom cursor system */
+        .cursor-dot {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+        }
+
+
+
+
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            /*this is the secret for smooth movement */
+            will-change: transform;
+        }
+
+
+
+
+
+        /* cntent styles */
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            mix-blend-mode: difference;
+        }
+
+        .hero-text {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(4rem, 15vw, 12rem);
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+            line-height: 0.8;
+        }
+
+        .subline {
+            margin-top: 2rem;
+            font-size: 1rem;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+
+
+
+        /* canvas background */
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            filter: contrast(1.2) brightness(0.8);
+        }
+
+
+
+
+        /* noise */
+        .grain {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            opacity: 0.04;
+            pointer-events: none;
+            background: url('https://grainy-gradients.vercel.app/noise.svg');
+        }
+    </style>
+</head>
+
+
+
+
+
+
+
+
+
+<body>
+
+    <div class="grain"></div>
+    <canvas id="canvas"></canvas>
+
+    <div class="cursor-dot" id="dot"></div>
+    <div class="cursor-outline" id="outline"></div>
+
+    <main>
+        <div class="hero-text">
+            <h1 id="title">PURE</h1>
+            <p class="subline">Experience Perfection</p>
+        </div>
+    </main>
+
+    <script>
+        /** SMOOTH CURSOR LOGIC **/
+        const dot = document.getElementById('dot');
+        const outline = document.getElementById('outline');
+        
+        let mouseX = 0, mouseY = 0;
+        let dotX = 0, dotY = 0;
+        let outX = 0, outY = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        //LERP Function: Linear Interpolation
+
+        const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
+
+        function animateCursor() {
+            
+            dotX = lerp(dotX, mouseX, 0.2);
+            dotY = lerp(dotY, mouseY, 0.2);
+            
+        
+            outX = lerp(outX, mouseX, 0.1);
+            outY = lerp(outY, mouseY, 0.1);
+
+            dot.style.transform = `translate(${dotX - 4}px, ${dotY - 4}px)`;
+            outline.style.transform = `translate(${outX - 20}px, ${outY - 20}px)`;
+
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+
+
+
+
+
+
+
+        /** INSANE BACKGROUND LOGIC**/
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function initCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < 15; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 300 + 200,
+                    //dynamic colors
+                    color: i % 2 === 0 ? '#1a1a1a' : (i % 3 === 0 ? '#0033ff' : '#444444'),
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2
+                });
+            }
+        }
+
+        function drawBackground() {
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, width, height);
+
+            particles.forEach(p => {
+               
+                p.x += p.vx;
+                p.y += p.vy;
+
+                
+
+
+
+                if (p.x < -p.r) p.x = width + p.r;
+                if (p.x > width + p.r) p.x = -p.r;
+                if (p.y < -p.r) p.y = height + p.r;
+                if (p.y > height + p.r) p.y = -p.r;
+
+                
+                let dx = mouseX - p.x;
+                let dy = mouseY - p.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 600) {
+                    p.x -= dx * 0.005;
+                    p.y -= dy * 0.005;
+                }
+
+                
+
+
+
+
+                const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+                grad.addColorStop(0, p.color);
+                grad.addColorStop(1, 'transparent');
+                
+                ctx.globalCompositeOperation = 'screen';
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+        
+            requestAnimationFrame(drawBackground);
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        drawBackground();
+
+        
+
+
+
+        
+        const title = document.getElementById('title');
+        title.addEventListener('mouseenter', () => {
+            outline.style.transform += ' scale(2)';
+            outline.style.background = 'rgba(255,255,255,0.1)';
+        });
+        title.addEventListener('mouseleave', () => {
+            outline.style.background = 'transparent';
+        });
+
+    </script>
+</body>
+</html>
