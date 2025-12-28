@@ -1,0 +1,402 @@
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Abyss Portfolio</title>
+
+
+
+    <style>
+        :root {
+            --bg-deep: #000510;
+            --bg-shallow: #001e3c;
+            --accent: #aaddff;
+            --text: #ffffff;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            cursor: none !important;
+        }
+
+
+
+
+        body {
+            background: linear-gradient(to bottom, var(--bg-shallow), var(--bg-deep));
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /*the canvas handles all the magic */
+        #canvas {
+            position: fixed; top: 0; left: 0;
+            z-index: 1;
+            /*subtle blur to soften the digital edges */
+            filter: blur(1px); 
+        }
+
+        /*the Custom "Bathyscaphe" Cursor */
+        #cursor-light {
+            position: fixed;
+            top: 0; left: 0;
+            width: 300px; height: 300px;
+            margin-left: -150px; margin-top: -150px;
+            border-radius: 50%;
+            /*asoft light that reveals the deep */
+            background: radial-gradient(circle, rgba(170, 221, 255, 0.15) 0%, rgba(0,0,0,0) 70%);
+            pointer-events: none;
+            z-index: 9998;
+            will-change: transform;
+            mix-blend-mode: screen;
+        }
+
+        #cursor-dot {
+            position: fixed; top: 0; left: 0;
+            width: 6px; height: 6px;
+            margin-left: -3px; margin-top: -3px;
+            background: var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+
+
+
+        /*content */
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            /*makes text look like it's underwater */
+            text-shadow: 0 0 20px rgba(0, 20, 40, 0.8);
+        }
+
+        h1 {
+            font-size: clamp(3rem, 12vw, 10rem);
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            background: linear-gradient(to bottom, #ffffff, #aaddff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0.9;
+        }
+
+        p.subline {
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--accent);
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+
+
+
+
+
+
+
+
+<body>
+
+    <canvas id="canvas"></canvas>
+    <div id="cursor-light"></div>
+    <div id="cursor-dot"></div>
+
+    <main>
+        <h1>DEEP DIVE</h1>
+        <p class="subline">Immersive Digital Experiences</p>
+    </main>
+
+
+
+
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+
+
+
+        //mouse tracking with heavy LERP for underwater feel
+        let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        let cursorL = { x: mouse.x, y: mouse.y }; // Light position
+        let cursorD = { x: mouse.x, y: mouse.y }; // Dot position
+
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
+
+
+
+
+
+        // --- TIER 1: ENVIRONMENT (Marine Snow & Rays) ---
+        let particles = [];
+        let rays = [];
+
+        class Particle {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * height; //start randomly placed
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = height + 10;
+                this.speed = Math.random() * 0.5 + 0.1;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.drift = (Math.random() - 0.5) * 0.2;
+            }
+
+
+
+
+
+            update() {
+                this.y -= this.speed;
+                this.x += this.drift;
+                //push particles away from mouse light slightly
+                let dx = this.x - cursorL.x;
+                let dy = this.y - cursorL.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist < 150) {
+                    this.x += dx * 0.01;
+                    this.y += dy * 0.01;
+                }
+                if (this.y < -10) this.reset();
+            }
+            draw() {
+                //only draw if near the light to save performance and enhance effect
+                let dist = Math.hypot(this.x - cursorL.x, this.y - cursorL.y);
+                let opacity = 1 - (dist / 300);
+                if (opacity > 0) {
+                    ctx.fillStyle = `rgba(170, 221, 255, ${opacity * 0.5})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+        // --- TIER 2: THE SHARKS (Spine Animation) ---
+        class Shark {
+            constructor(sizeScale) {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.sizeScale = sizeScale;
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = sizeScale === 'large' ? 1 : 1.5;
+                //pocedural movement variables
+                this.turnSpeed = 0;
+                this.wanderNoise = Math.random() * 1000;
+                
+                //the Spine: An array of body segments
+                this.segments = [];
+                this.segNum = sizeScale === 'large' ? 12 : 8;
+                this.segLength = sizeScale === 'large' ? 25 : 15;
+                
+                for(let i=0; i<this.segNum; i++) {
+                    this.segments.push({x: this.x, y: this.y, angle: this.angle});
+                }
+            }
+
+            update() {
+                //1. Head Movement (Wandering)
+                this.wanderNoise += 0.01;
+                this.turnSpeed = (Math.sin(this.wanderNoise) * 0.02);
+                this.angle += this.turnSpeed;
+
+                //move head forward
+                this.segments[0].x += Math.cos(this.angle) * this.speed;
+                this.segments[0].y += Math.sin(this.angle) * this.speed;
+                this.segments[0].angle = this.angle;
+
+
+
+                //wrap around screen
+                const margin = 200;
+                if(this.segments[0].x > width + margin) this.segments[0].x = -margin;
+                if(this.segments[0].x < -margin) this.segments[0].x = width + margin;
+                if(this.segments[0].y > height + margin) this.segments[0].y = -margin;
+                if(this.segments[0].y < -margin) this.segments[0].y = height + margin;
+
+
+
+
+
+                // 2. Inverse Kinematics (Body follows head)
+                for(let i = 1; i < this.segNum; i++) {
+                    let leader = this.segments[i-1];
+                    let follower = this.segments[i];
+                    
+                    let dx = leader.x - follower.x;
+                    let dy = leader.y - follower.y;
+                    let targetAngle = Math.atan2(dy, dx);
+                    
+                    // smooth rotation of body segments
+                    follower.angle = lerp(follower.angle, targetAngle, 0.1);
+
+                    // position segment behind the leader at fixed distance
+                    follower.x = leader.x - Math.cos(follower.angle) * this.segLength;
+                    follower.y = leader.y - Math.sin(follower.angle) * this.segLength;
+                }
+            }
+
+
+
+
+
+            draw() {
+                //draw silhouette based on spine positions
+                ctx.beginPath();
+                ctx.moveTo(this.segments[0].x, this.segments[0].y);
+                
+                //draw one side of the body
+                for(let i = 1; i < this.segNum; i++) {
+                    //taper the width based on segment index
+                    let thickness = (1 - i/this.segNum) * (this.sizeScale === 'large' ? 20 : 12);
+                    let perpAngle = this.segments[i].angle + Math.PI/2;
+                    let sideX = this.segments[i].x + Math.cos(perpAngle) * thickness;
+                    let sideY = this.segments[i].y + Math.sin(perpAngle) * thickness;
+                    ctx.lineTo(sideX, sideY);
+
+                     //aadd fins and tail manually at specific segments if desired
+                }
+                
+
+
+
+
+                //draw tail point
+                ctx.lineTo(this.segments[this.segNum-1].x, this.segments[this.segNum-1].y);
+
+                //draw other side back to head
+                for(let i = this.segNum - 2; i > 0; i--) {
+                    let thickness = (1 - i/this.segNum) * (this.sizeScale === 'large' ? 20 : 12);
+                    let perpAngle = this.segments[i].angle - Math.PI/2;
+                    let sideX = this.segments[i].x + Math.cos(perpAngle) * thickness;
+                    let sideY = this.segments[i].y + Math.sin(perpAngle) * thickness;
+                    ctx.lineTo(sideX, sideY);
+                }
+                ctx.closePath();
+
+                //shark appearance: Dark Silhouette with subtle rim lighting
+                ctx.fillStyle = "#000814"; //very dark blue/black
+                ctx.shadowColor = "#001e3c"; //subtle glow
+                ctx.shadowBlur = 20;
+                ctx.fill();
+                ctx.shadowBlur = 0; //reset shadow for performance
+            }
+        }
+
+
+
+
+
+
+
+        let sharks = [];
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            
+            particles = [];
+            for(let i=0; i< 300; i++) particles.push(new Particle());
+
+            sharks = [];
+            //add one big shark and a few smaller ones
+            sharks.push(new Shark('large'));
+            sharks.push(new Shark('small'));
+            sharks.push(new Shark('small'));
+        }
+
+
+
+
+
+
+
+
+
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // 1.draw fake caustics (Light Rays)
+            
+            let warp = (mouse.x / width - 0.5) * 200;
+            const gradient = ctx.createLinearGradient(width/2 + warp, -100, width/2 - warp, height);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.05)');
+            gradient.addColorStop(0.5, 'rgba(170, 221, 255, 0.02)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(0,0); ctx.lineTo(width,0); ctx.lineTo(width*0.8 - warp, height); ctx.lineTo(width*0.2 + warp, height);
+            ctx.fill();
+
+            // 2.update & draw particles
+            particles.forEach(p => { p.update(); p.draw(); });
+
+            // 3.update
+            sharks.forEach(s => { s.update(); s.draw(); });
+
+            // 4. update cursor
+            cursorL.x = lerp(cursorL.x, mouse.x, 0.08);
+            cursorL.y = lerp(cursorL.y, mouse.y, 0.08);
+            cursorD.x = lerp(cursorD.x, mouse.x, 0.2);
+            cursorD.y = lerp(cursorD.y, mouse.y, 0.2);
+
+            document.getElementById('cursor-light').style.transform = `translate(${cursorL.x}px, ${cursorL.y}px)`;
+            document.getElementById('cursor-dot').style.transform = `translate(${cursorD.x}px, ${cursorD.y}px)`;
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        animate();
+
+    </script>
+</body>
+</html>
