@@ -1,0 +1,236 @@
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>The Grove</title>
+
+    <style>
+        :root {
+            --bg: #0d0e0d;
+            --branch: #e0eadd;
+            --accent: #889e81;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            cursor: none !important;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--branch);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 1;
+        }
+
+        /* custom cursor: the seed */
+        #cursor {
+            position: fixed;
+            width: 8px; height: 8px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            box-shadow: 0 0 15px white;
+        }
+
+        #cursor-aura {
+            position: fixed;
+            width: 40px; height: 40px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease-out;
+        }
+
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 10vw;
+            mix-blend-mode: difference;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 10vw, 8rem);
+            font-weight: 200;
+            letter-spacing: -0.02em;
+            line-height: 0.9;
+        }
+
+        p {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        /* subtle grain overlay */
+        .grain {
+            position: fixed; inset: 0;
+            background: url('https://grainy-gradients.vercel.app/noise.svg');
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+
+
+
+
+
+
+
+
+<body>
+
+    <div class="grain"></div>
+    <div id="cursor"></div>
+    <div id="cursor-aura"></div>
+    <canvas id="canvas"></canvas>
+
+
+
+
+
+    <main>
+        <h1>SILENT<br>PORTFOLIO</h1>
+        <p>Architect of Organic Systems</p>
+    </main>
+
+
+
+
+
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const cursor = document.getElementById('cursor');
+        const aura = document.getElementById('cursor-aura');
+
+        let width, height;
+        let mouseX = 0, mouseY = 0;
+        let lerpX = 0, lerpY = 0;
+
+        //this handles resizing and centering the canvas
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            mouseX = width / 2;
+            mouseY = height / 2;
+        }
+
+        window.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+
+
+
+
+        //the core recursive tree function
+        function drawTree(x, y, len, angle, branchWidth, color) {
+            ctx.beginPath();
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = branchWidth;
+            ctx.translate(x, y);
+            
+
+
+            //this adds the "sway" and mouse reaction
+            //the tree leans toward the mouse light
+            let mouseInfluence = (mouseX - width/2) * 0.00005;
+            let sway = Math.sin(Date.now() * 0.001) * 0.02;
+            ctx.rotate((angle + sway + mouseInfluence) * Math.PI / 180);
+            
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -len);
+            ctx.stroke();
+
+
+
+
+            //base case for recursion
+            if (len < 10) {
+                //this draws the "blossoms" at the tips
+                ctx.beginPath();
+                ctx.arc(0, -len, 2, 0, Math.PI * 2);
+                ctx.fillStyle = distToMouse(x, y) < 200 ? '#ffffff' : '#4a5d4e';
+                ctx.fill();
+                ctx.restore();
+                return;
+            }
+
+            //recursive calls for left and right branches
+            //0.75 is the golden ratio approximation for scaling
+            drawTree(0, -len, len * 0.75, angle - 15, branchWidth * 0.8, color);
+            drawTree(0, -len, len * 0.75, angle + 15, branchWidth * 0.8, color);
+
+            ctx.restore();
+        }
+
+
+        function distToMouse(x, y) {
+            return Math.hypot(x - mouseX, y - mouseY);
+        }
+
+
+        function animate() {
+            //clear with a slight trail effect
+            ctx.fillStyle = '#0d0e0d';
+            ctx.fillRect(0, 0, width, height);
+
+            //smooth cursor movement
+            lerpX += (mouseX - lerpX) * 0.1;
+            lerpY += (mouseY - lerpY) * 0.1;
+            cursor.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+            aura.style.transform = `translate(${lerpX - 16}px, ${lerpY - 16}px)`;
+
+            //draw the main world tree
+            //params: x, y, length, angle, thickness, color
+            drawTree(width / 2, height, height * 0.25, 0, 1.5, 'rgba(224, 234, 221, 0.4)');
+
+            //draw secondary "ghost" trees for depth
+            drawTree(width * 0.2, height, height * 0.15, -5, 1, 'rgba(74, 93, 78, 0.2)');
+            drawTree(width * 0.8, height, height * 0.15, 5, 1, 'rgba(74, 93, 78, 0.2)');
+
+            requestAnimationFrame(animate);
+        }
+
+
+
+        init();
+        animate();
+        window.addEventListener('resize', init);
+    </script>
+</body>
+</html>
