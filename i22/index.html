@@ -1,0 +1,266 @@
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+<head>
+
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+    <title>FLUX | Fluid Minimalist</title>
+
+
+    <style>
+        :root {
+            --bg: #f0f0f0;
+            --fluid: #050505;
+            --text: #050505;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            cursor: none !important;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /*this container applies the gooey effect to everything inside*/
+        .fluid-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            filter: url('#goo'); /*links to the svg filter below*/
+            z-index: 1;
+        }
+
+
+
+
+
+        canvas {
+            display: block;
+        }
+
+        /*custom fluid cursor*/
+        #cursor {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            background: var(--fluid);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transition: transform 0.1s ease-out;
+        }
+
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: clamp(4rem, 15vw, 12rem);
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            mix-blend-mode: color-burn;
+        }
+
+        .desc {
+            font-size: 0.8rem;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            margin-top: -10px;
+            opacity: 0.5;
+        }
+
+        /*the "magic" filter that creates fluid tension*/
+        svg {
+            position: absolute;
+            visibility: hidden;
+        }
+    </style>
+</head>
+
+
+
+
+
+<body>
+
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+        <defs>
+            <filter id="goo">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+                <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+            </filter>
+        </defs>
+    </svg>
+
+    <div id="cursor"></div>
+
+    <div class="fluid-container">
+        <canvas id="canvas"></canvas>
+    </div>
+
+
+
+
+
+    <main>
+        <h1>FLUX</h1>
+        <p class="desc">liquid motion design</p>
+    </main>
+
+
+
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const cursor = document.getElementById('cursor');
+
+        let width, height;
+        let particles = [];
+        let mouse = { x: -100, y: -100, active: false };
+        let lastMouse = { x: 0, y: 0 };
+
+        //this sets the canvas size and particle density
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            particles = [];
+            //create a base set of floating droplets
+            for (let i = 0; i < 12; i++) {
+                particles.push(new Droplet(Math.random() * width, Math.random() * height, true));
+            }
+        }
+
+
+
+
+        class Droplet {
+            constructor(x, y, isBase = false) {
+                this.x = x;
+                this.y = y;
+                this.base = isBase;
+                this.radius = isBase ? Math.random() * 60 + 40 : Math.random() * 30 + 20;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.life = 1; //only used for mouse-spawned droplets
+            }
+
+
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                //this keeps base droplets bouncing inside the frame
+                if (this.base) {
+                    if (this.x < -100 || this.x > width + 100) this.vx *= -1;
+                    if (this.y < -100 || this.y > height + 100) this.vy *= -1;
+                } else {
+                    //mouse droplets fade out over time
+                    this.life -= 0.01;
+                    this.radius *= 0.99;
+                }
+
+                //droplets react to the cursor "gravity"
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 200) {
+                    this.vx += dx * 0.001;
+                    this.vy += dy * 0.001;
+                }
+            }
+
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#050505';
+                ctx.fill();
+            }
+        }
+
+
+
+
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            
+            //this calculates mouse velocity to deform the cursor
+            let velocity = Math.hypot(e.clientX - lastMouse.x, e.clientY - lastMouse.y);
+            let scale = 1 + (velocity / 50);
+            
+            cursor.style.transform = `translate(${e.clientX - 15}px, ${e.clientY - 15}px) scale(${Math.min(scale, 3)})`;
+            
+            //this spawns temporary droplets when moving fast
+            if (velocity > 15 && particles.length < 50) {
+                particles.push(new Droplet(e.clientX, e.clientY, false));
+            }
+
+            lastMouse.x = e.clientX;
+            lastMouse.y = e.clientY;
+        });
+
+
+
+
+        function animate() {
+            //this clearrect doesn't need a trail because the svg filter blurs it
+            ctx.clearRect(0, 0, width, height);
+
+            //this draws the cursor shadow on the canvas to allow it to merge with blobs
+            ctx.beginPath();
+            ctx.arc(mouse.x, mouse.y, 30, 0, Math.PI * 2);
+            ctx.fillStyle = '#050505';
+            ctx.fill();
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+
+                //remove dead mouse droplets
+                if (!p.base && (p.life <= 0 || p.radius < 1)) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        animate();
+    </script>
+
+    
+</body>
+</html>
