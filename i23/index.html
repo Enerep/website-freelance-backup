@@ -1,0 +1,498 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio - Reality Bending</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            background: #000;
+            cursor: none;
+        }
+
+
+        /*custom cursor*/
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ff00ff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            mix-blend-mode: difference;
+            transition: transform 0.1s;
+        }
+
+        .cursor-trail {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #00ffff, transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            animation: fadeOut 1s forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: scale(2);
+            }
+        }
+
+        /*animated background*/
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+
+
+
+        /*particles layer*/
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 3s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        /*geometric shapes layer*/
+        .shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            animation: morph 4s infinite ease-in-out;
+        }
+
+        @keyframes morph {
+            0%, 100% { border-radius: 50% 50% 50% 50%; transform: rotate(0deg) scale(1); }
+            25% { border-radius: 30% 70% 70% 30%; transform: rotate(90deg) scale(1.1); }
+            50% { border-radius: 70% 30% 30% 70%; transform: rotate(180deg) scale(0.9); }
+            75% { border-radius: 50% 50% 30% 70%; transform: rotate(270deg) scale(1.05); }
+        }
+
+        /*wave effect*/
+        .waves {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .wave {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,0,255,0.1), transparent);
+            animation: wave 8s infinite linear;
+        }
+
+        @keyframes wave {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+
+
+
+
+        /*main content*/
+        .content {
+            position: relative;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 8vw;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite, glitch 1s infinite;
+            text-shadow: 0 0 20px rgba(255,0,255,0.5);
+            letter-spacing: 0.1em;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-2px, -2px); }
+            80% { transform: translate(2px, 2px); }
+        }
+
+        .subtitle {
+            font-size: 2vw;
+            margin-top: 20px;
+            color: #00ffff;
+            animation: flicker 2s infinite;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .cta {
+            margin-top: 50px;
+            padding: 20px 60px;
+            font-size: 1.5vw;
+            background: transparent;
+            border: 3px solid #ff00ff;
+            color: #ff00ff;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: #ff00ff;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+            z-index: -1;
+        }
+
+        .cta:hover {
+            color: #000;
+            border-color: #00ffff;
+            transform: scale(1.1);
+        }
+
+        .cta:hover::before {
+            width: 300%;
+            height: 300%;
+        }
+
+
+
+
+        /*rotating rings*/
+        .rings {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .ring {
+            position: absolute;
+            border: 2px solid;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: rotate 10s infinite linear;
+        }
+
+        @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /*matrix rain effect*/
+        .matrix {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.3;
+        }
+
+
+        /*grid overlay*/
+        .grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(0,255,255,0.1) 49px, rgba(0,255,255,0.1) 50px),
+                repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,0,255,0.1) 49px, rgba(255,0,255,0.1) 50px);
+            animation: gridMove 20s infinite linear;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /*pulsing orbs*/
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.5); opacity: 0.8; }
+        }
+    </style>
+</head>
+
+
+
+<body>
+    <div class="cursor"></div>
+    
+    <div class="background">
+        <div class="grid"></div>
+        <div class="waves"></div>
+        <div class="particles"></div>
+        <div class="shapes"></div>
+        <canvas class="matrix"></canvas>
+        <div class="rings"></div>
+    </div>
+
+
+
+    <div class="content">
+        <h1>Name</h1>
+        <p class="subtitle">Creator + Developer + Visionary</p>
+        <button class="cta">Portfolio TBD</button>
+    </div>
+
+
+    <script>
+
+        //custom cursor
+        const cursor = document.querySelector('.cursor');
+        let mouseX = 0, mouseY = 0;
+        let cursorX = 0, cursorY = 0;
+
+
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            
+            //create trail
+            const trail = document.createElement('div');
+            trail.className = 'cursor-trail';
+            trail.style.left = e.clientX - 5 + 'px';
+            trail.style.top = e.clientY - 5 + 'px';
+            document.body.appendChild(trail);
+            
+            setTimeout(() => trail.remove(), 1000);
+        });
+
+        function animateCursor() {
+            cursorX += (mouseX - cursorX) * 0.2;
+            cursorY += (mouseY - cursorY) * 0.2;
+            cursor.style.left = cursorX - 10 + 'px';
+            cursor.style.top = cursorY - 10 + 'px';
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+
+
+
+
+
+
+        //create particles
+        const particlesContainer = document.querySelector('.particles');
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.width = Math.random() * 5 + 2 + 'px';
+            particle.style.height = particle.style.width;
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            particle.style.animationDuration = Math.random() * 3 + 2 + 's';
+            particle.style.animationDelay = Math.random() * 2 + 's';
+            particlesContainer.appendChild(particle);
+        }
+
+
+
+
+        //create shapes
+        const shapesContainer = document.querySelector('.shapes');
+        for (let i = 0; i < 10; i++) {
+            const shape = document.createElement('div');
+            shape.className = 'shape';
+            const size = Math.random() * 200 + 100;
+            shape.style.width = size + 'px';
+            shape.style.height = size + 'px';
+            shape.style.left = Math.random() * 100 + '%';
+            shape.style.top = Math.random() * 100 + '%';
+            shape.style.background = `linear-gradient(45deg, rgba(255,0,255,0.2), rgba(0,255,255,0.2))`;
+            shape.style.animationDuration = Math.random() * 4 + 3 + 's';
+            shape.style.animationDelay = Math.random() * 2 + 's';
+            shapesContainer.appendChild(shape);
+        }
+
+
+
+
+        //create waves
+        const wavesContainer = document.querySelector('.waves');
+        for (let i = 0; i < 3; i++) {
+            const wave = document.createElement('div');
+            wave.className = 'wave';
+            wave.style.animationDuration = (8 + i * 2) + 's';
+            wave.style.animationDelay = i * 0.5 + 's';
+            wavesContainer.appendChild(wave);
+        }
+
+
+
+        //create rotating rings
+        const ringsContainer = document.querySelector('.rings');
+        for (let i = 0; i < 5; i++) {
+            const ring = document.createElement('div');
+            ring.className = 'ring';
+            const size = 200 + i * 100;
+            ring.style.width = size + 'px';
+            ring.style.height = size + 'px';
+            ring.style.borderColor = i % 2 === 0 ? '#ff00ff' : '#00ffff';
+            ring.style.animationDuration = (10 + i * 2) + 's';
+            ring.style.animationDirection = i % 2 === 0 ? 'normal' : 'reverse';
+            ringsContainer.appendChild(ring);
+        }
+
+
+
+        //create pulsing orbs
+        const background = document.querySelector('.background');
+        for (let i = 0; i < 5; i++) {
+            const orb = document.createElement('div');
+            orb.className = 'orb';
+            const size = Math.random() * 300 + 200;
+            orb.style.width = size + 'px';
+            orb.style.height = size + 'px';
+            orb.style.left = Math.random() * 100 + '%';
+            orb.style.top = Math.random() * 100 + '%';
+            orb.style.background = i % 2 === 0 ? '#ff00ff' : '#00ffff';
+            orb.style.animationDuration = Math.random() * 3 + 2 + 's';
+            orb.style.animationDelay = Math.random() * 2 + 's';
+            background.appendChild(orb);
+        }
+
+
+
+        //matrix rain effect
+        const canvas = document.querySelector('.matrix');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#0f0';
+            ctx.font = fontSize + 'px monospace';
+            
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 50);
+
+
+
+        //button interaction
+        const cta = document.querySelector('.cta');
+        cta.addEventListener('click', () => {
+            document.body.style.animation = 'colorShift 2s forwards';
+        });
+
+
+
+        //resize handler
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+
+
+        
+        //random background color shift
+        let hue = 0;
+        setInterval(() => {
+            hue += 1;
+            document.body.style.background = `hsl(${hue}, 100%, 5%)`;
+        }, 100);
+    </script>
+</body>
+</html>
