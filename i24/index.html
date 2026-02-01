@@ -1,0 +1,478 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Portfolio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+        }
+
+        /*cosmic background with nebula effect*/
+        .space {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #1a0033 0%, #000000 100%);
+            z-index: 1;
+        }
+
+        /*animated stars background*/
+        .stars {
+            position: fixed;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            z-index: 2;
+            animation: rotate 240s linear infinite;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+
+        /*central sun element*/
+        .sun {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 180px;
+            height: 180px;
+            margin: -90px 0 0 -90px;
+            background: radial-gradient(circle, #fff740 0%, #ff9500 40%, #ff4500 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 60px #ff9500, 0 0 120px #ff4500, 0 0 180px #ff4500;
+            z-index: 10;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        /*sun corona effect*/
+        .sun::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            background: radial-gradient(circle, rgba(255,149,0,0.4) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: corona 6s linear infinite;
+        }
+
+
+
+        /*orbital paths*/
+        .orbit {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            animation: orbitGlow 8s ease-in-out infinite;
+        }
+
+        /*planets orbiting*/
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5);
+            animation: rotate 20s linear infinite;
+        }
+
+        /*earth-like planet*/
+        .planet1 {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #4a90e2 0%, #2ecc71 50%, #3498db 100%);
+            top: -25px;
+            left: 50%;
+            margin-left: -25px;
+            box-shadow: 0 0 30px rgba(74, 144, 226, 0.8), inset -10px -10px 20px rgba(0,0,0,0.5);
+            animation: orbit1 12s linear infinite;
+        }
+
+
+
+
+        /*mars-like planet*/
+        .planet2 {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            top: -20px;
+            left: 50%;
+            margin-left: -20px;
+            box-shadow: 0 0 25px rgba(231, 76, 60, 0.8), inset -8px -8px 16px rgba(0,0,0,0.5);
+            animation: orbit2 18s linear infinite;
+        }
+
+        /*jupiter-like planet*/
+        .planet3 {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #f39c12 0%, #d68910 50%, #ba7506 100%);
+            top: -35px;
+            left: 50%;
+            margin-left: -35px;
+            box-shadow: 0 0 40px rgba(243, 156, 18, 0.8), inset -12px -12px 24px rgba(0,0,0,0.5);
+            animation: orbit3 25s linear infinite;
+        }
+
+
+
+
+        /*saturn-like planet with rings*/
+        .planet4 {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #f4d03f 0%, #d4af37 100%);
+            top: -30px;
+            left: 50%;
+            margin-left: -30px;
+            box-shadow: 0 0 35px rgba(244, 208, 63, 0.8), inset -10px -10px 20px rgba(0,0,0,0.5);
+            animation: orbit4 32s linear infinite;
+        }
+
+        .planet4::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 20px;
+            margin: -10px 0 0 -50px;
+            border: 3px solid rgba(244, 208, 63, 0.6);
+            border-radius: 50%;
+            transform: rotateX(75deg);
+        }
+
+        /*purple alien planet*/
+        .planet5 {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            top: -22.5px;
+            left: 50%;
+            margin-left: -22.5px;
+            box-shadow: 0 0 30px rgba(155, 89, 182, 0.8), inset -9px -9px 18px rgba(0,0,0,0.5);
+            animation: orbit5 38s linear infinite;
+        }
+
+        /*content container*/
+        .content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .content h1 {
+            font-size: 4em;
+            font-weight: 700;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(74, 144, 226, 0.6);
+            animation: float 6s ease-in-out infinite;
+            background: linear-gradient(45deg, #fff, #4a90e2, #9b59b6, #e74c3c);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: float 6s ease-in-out infinite, gradientShift 8s ease infinite;
+        }
+
+
+
+        .content p {
+            font-size: 1.5em;
+            margin-top: 20px;
+            opacity: 0.9;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            animation: float 6s ease-in-out infinite 0.5s;
+        }
+
+
+
+        /*shooting stars*/
+        .shooting-star {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 4px white;
+            z-index: 5;
+            animation: shoot 3s linear infinite;
+        }
+
+
+        /*nebula clouds*/
+        .nebula {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.3;
+            z-index: 2;
+            animation: nebulaDrift 30s ease-in-out infinite;
+        }
+
+        .nebula1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(155, 89, 182, 0.4) 0%, transparent 70%);
+            top: 10%;
+            left: 20%;
+            animation: nebulaDrift 25s ease-in-out infinite;
+        }
+
+        .nebula2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(74, 144, 226, 0.3) 0%, transparent 70%);
+            bottom: 10%;
+            right: 15%;
+            animation: nebulaDrift 35s ease-in-out infinite reverse;
+        }
+
+        .nebula3 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(231, 76, 60, 0.3) 0%, transparent 70%);
+            top: 40%;
+            right: 25%;
+            animation: nebulaDrift 30s ease-in-out infinite 5s;
+        }
+
+        /*particle effects*/
+        .particle {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            z-index: 4;
+            animation: particleFloat 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes orbit1 {
+            from { transform: rotate(0deg) translateX(250px) rotate(0deg); }
+            to { transform: rotate(360deg) translateX(250px) rotate(-360deg); }
+        }
+
+        @keyframes orbit2 {
+            from { transform: rotate(0deg) translateX(380px) rotate(0deg); }
+            to { transform: rotate(360deg) translateX(380px) rotate(-360deg); }
+        }
+
+        @keyframes orbit3 {
+            from { transform: rotate(0deg) translateX(520px) rotate(0deg); }
+            to { transform: rotate(360deg) translateX(520px) rotate(-360deg); }
+        }
+
+        @keyframes orbit4 {
+            from { transform: rotate(0deg) translateX(680px) rotate(0deg); }
+            to { transform: rotate(360deg) translateX(680px) rotate(-360deg); }
+        }
+
+        @keyframes orbit5 {
+            from { transform: rotate(0deg) translateX(820px) rotate(0deg); }
+            to { transform: rotate(360deg) translateX(820px) rotate(-360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 60px #ff9500, 0 0 120px #ff4500, 0 0 180px #ff4500; }
+            50% { transform: scale(1.1); box-shadow: 0 0 80px #ff9500, 0 0 160px #ff4500, 0 0 240px #ff4500; }
+        }
+
+        @keyframes corona {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-300px, 300px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes nebulaDrift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translate(0, 100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(100px, -100vh) scale(1);
+                opacity: 0;
+            }
+        }
+
+
+
+        @keyframes orbitGlow {
+            0%, 100% { border-color: rgba(255, 255, 255, 0.1); }
+            50% { border-color: rgba(74, 144, 226, 0.3); }
+        }
+    </style>
+</head>
+<body>
+    <div class="space"></div>
+    
+    <div class="stars" id="starsContainer"></div>
+    
+    <div class="nebula nebula1"></div>
+    <div class="nebula nebula2"></div>
+    <div class="nebula nebula3"></div>
+    
+    <div class="sun"></div>
+    
+    <div class="orbit" style="width: 500px; height: 500px;">
+        <div class="planet planet1"></div>
+    </div>
+    
+    <div class="orbit" style="width: 760px; height: 760px;">
+        <div class="planet planet2"></div>
+    </div>
+    
+    <div class="orbit" style="width: 1040px; height: 1040px;">
+        <div class="planet planet3"></div>
+    </div>
+    
+    <div class="orbit" style="width: 1360px; height: 1360px;">
+        <div class="planet planet4"></div>
+    </div>
+    
+    <div class="orbit" style="width: 1640px; height: 1640px;">
+        <div class="planet planet5"></div>
+    </div>
+    
+    <div class="content">
+        <h1>COSMIC CREATOR</h1>
+        <p>Exploring the Universe of Possibilities</p>
+    </div>
+
+    <script>
+        //generate random stars
+        const starsContainer = document.getElementById('starsContainer');
+        for (let i = 0; i < 400; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            star.style.opacity = Math.random();
+            starsContainer.appendChild(star);
+        }
+        
+        //create shooting stars
+        function createShootingStar() {
+            const star = document.createElement('div');
+            star.className = 'shooting-star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 50 + '%';
+            star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            document.body.appendChild(star);
+            
+            setTimeout(() => {
+                star.remove();
+            }, 4000);
+        }
+        
+        //spawn shooting stars regularly
+        setInterval(createShootingStar, 2000);
+        
+        //create floating particles
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            particle.style.animationDelay = Math.random() * 5 + 's';
+            document.body.appendChild(particle);
+            
+            setTimeout(() => {
+                particle.remove();
+            }, 25000);
+        }
+        
+        //spawn particles
+        for (let i = 0; i < 50; i++) {
+            setTimeout(createParticle, i * 500);
+        }
+        
+        setInterval(createParticle, 1000);
+        
+        //add mouse parallax effect
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 20;
+            const y = (e.clientY / window.innerHeight - 0.5) * 20;
+            
+            document.querySelectorAll('.planet').forEach((planet, index) => {
+                const speed = (index + 1) * 0.5;
+                planet.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
