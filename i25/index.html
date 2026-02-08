@@ -1,0 +1,280 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascent | City View</title>
+    <style>
+        :root {
+            --bg: #050507;
+            --accent: #ffb300;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            cursor: none !important;
+        }
+
+        body {
+            background: var(--bg);
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+        }
+
+        /* drone crosshair cursor */
+        #cursor {
+            position: fixed;
+            width: 40px; height: 40px;
+            border: 1px solid var(--accent);
+            pointer-events: none;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            mix-blend-mode: difference;
+        }
+
+        #cursor::before {
+            content: '';
+            position: absolute;
+            width: 100%; height: 1px; background: var(--accent);
+        }
+
+        #cursor::after {
+            content: '';
+            position: absolute;
+            width: 1px; height: 100%; background: var(--accent);
+        }
+
+        #cursor-data {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            font-size: 10px;
+            color: var(--accent);
+            padding: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 80px;
+            pointer-events: none;
+        }
+
+        .altimeter {
+            position: fixed;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .alt-line {
+            width: 30px; height: 1px; background: white; opacity: 0.3;
+        }
+
+        .alt-line.active {
+            width: 60px; background: var(--accent); opacity: 1;
+        }
+
+        h1 {
+            font-size: 8vw;
+            font-weight: 900;
+            line-height: 0.8;
+            margin-bottom: 20px;
+            letter-spacing: -5px;
+        }
+
+        .floor-counter {
+            font-size: 2rem;
+            color: var(--accent);
+        }
+    </style>
+</head>
+
+
+
+<body>
+
+    <div id="cursor"></div>
+    <div id="cursor-data"></div>
+    <canvas id="canvas"></canvas>
+
+    <div class="altimeter" id="altimeter"></div>
+
+
+    <main>
+        <div class="floor-counter" id="floor">FL-00</div>
+        <h1>THE<br>ASCENT</h1>
+    </main>
+
+
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const cursor = document.getElementById('cursor');
+        const cursorData = document.getElementById('cursor-data');
+        const floorDisp = document.getElementById('floor');
+
+        let width, height;
+        let mouseX = 0, mouseY = 0;
+        let scrollY = 0;
+        let buildings = [];
+
+        //this sets up the initial city layout
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            buildings = [];
+            
+            //create a grid of background buildings
+            for(let i=0; i < 40; i++) {
+                buildings.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    w: Math.random() * 100 + 50,
+                    h: Math.random() * 200 + 100,
+                    depth: Math.random() * 0.8 + 0.2, //this controls parallax speed
+                    windows: Math.random() > 0.5
+                });
+            }
+
+            //this builds the side altimeter marks
+            const alt = document.getElementById('altimeter');
+            alt.innerHTML = '';
+            for(let i=0; i<20; i++) {
+                const div = document.createElement('div');
+                div.className = 'alt-line';
+                alt.appendChild(div);
+            }
+        }
+
+
+
+
+        window.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            
+            //move the tactical cursor
+            cursor.style.left = `${mouseX - 20}px`;
+            cursor.style.top = `${mouseY - 20}px`;
+            cursorData.style.left = `${mouseX + 25}px`;
+            cursorData.style.top = `${mouseY + 25}px`;
+            cursorData.innerText = `lat: ${mouseX} \nlon: ${mouseY}`;
+        });
+
+
+
+        function drawCity() {
+            scrollY += 2; //this is our climbing speed
+            let currentFloor = Math.floor(scrollY / 100);
+            floorDisp.innerText = `FL-${currentFloor.toString().padStart(2, '0')}`;
+
+            //update altimeter lines
+            const lines = document.querySelectorAll('.alt-line');
+            lines.forEach((l, i) => {
+                let activeIndex = (currentFloor + i) % 20;
+                l.classList.toggle('active', i === 10);
+            });
+
+            //draw background grid
+            ctx.strokeStyle = '#111115';
+            ctx.lineWidth = 1;
+            for(let i=0; i<width; i+=50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
+            }
+
+            //draw the receding buildings
+            buildings.forEach(b => {
+                //this calculates the movement based on depth
+                let bY = (b.y + (scrollY * b.depth)) % (height + 200);
+                let actualY = bY - 100;
+
+                //fading out as they get further "away"
+                let opacity = b.depth * 0.3;
+                ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                
+                //draw building block
+                ctx.fillRect(b.x, actualY, b.w, b.h);
+
+                //draw "windows" on buildings
+                if(b.windows) {
+                    ctx.fillStyle = `rgba(255, 179, 0, ${opacity * 2})`;
+                    for(let wx=0; wx<b.w; wx+=15) {
+                        for(let wy=0; wy<b.h; wy+=20) {
+                            if(Math.random() > 0.8) ctx.fillRect(b.x + wx + 5, actualY + wy + 5, 3, 3);
+                        }
+                    }
+                }
+            });
+
+
+            //this is the "main building" we are climbing (the glass wall)
+            //it creates a subtle glare effect that follows the mouse
+            const grad = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 600);
+            grad.addColorStop(0, 'rgba(255, 179, 0, 0.05)');
+            grad.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+
+            //structural vertical beams of our building
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 2;
+            [0.1, 0.9].forEach(pos => {
+                ctx.beginPath();
+                ctx.moveTo(width * pos, 0);
+                ctx.lineTo(width * pos, height);
+                ctx.stroke();
+            });
+        }
+
+        
+        function animate() {
+            ctx.fillStyle = varColor('--bg');
+            ctx.fillRect(0, 0, width, height);
+            
+            drawCity();
+            requestAnimationFrame(animate);
+        }
+
+        function varColor(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        init();
+        animate();
+        window.addEventListener('resize', init);
+    </script>
+</body>
+</html>
