@@ -1,0 +1,324 @@
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABYSSAL | Deep Portfolio</title>
+
+
+
+    <style>
+        :root {
+            --bg-deep: #000205;
+            --bg-shallow: #010a18;
+            --biolum-1: #00f7ff; /* Electric Cyan */
+            --biolum-2: #5d00ff; /* Deep Purple */
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            cursor: none !important;
+        }
+
+        body {
+            background: radial-gradient(circle at center, var(--bg-shallow) 0%, var(--bg-deep) 100%);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+
+
+        canvas {
+            position: fixed; inset: 0; z-index: 1;
+            /* Crucial blending mode for glowing lights against dark */
+            mix-blend-mode: lighten; 
+        }
+
+
+
+        /* The Sonar Cursor */
+        #cursor {
+            position: fixed;
+            width: 20px; height: 20px;
+            background: var(--biolum-1);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            box-shadow: 0 0 30px var(--biolum-1), 0 0 60px var(--biolum-2);
+            transition: transform 0.1s ease-out;
+            mix-blend-mode: screen;
+        }
+
+        #cursor-ring {
+            position: fixed;
+            width: 100px; height: 100px;
+            border: 2px solid var(--biolum-2);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.5;
+            /* The pinging animation */
+            animation: ping 3s infinite cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        @keyframes ping {
+            0% { transform: scale(0.5); opacity: 1; border-color: var(--biolum-1); }
+            100% { transform: scale(2.5); opacity: 0; border-color: var(--biolum-2); }
+        }
+
+
+
+
+        /* Minimalist Content */
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            text-align: center;
+        }
+
+
+
+
+        h1 {
+            font-size: clamp(3rem, 10vw, 8rem);
+            font-weight: 100;
+            letter-spacing: 0.2em;
+            /* Gradient text that looks like glowing water */
+            background: linear-gradient(to right, var(--biolum-1), white, var(--biolum-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0.8;
+            filter: blur(1px);
+        }
+
+        p {
+            margin-top: 20px;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            color: var(--biolum-1);
+            opacity: 0.5;
+        }
+
+        /* Vignette overlay for pressure feel */
+        .vignette {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at center, transparent 40%, black 120%);
+            z-index: 5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="vignette"></div>
+    <div id="cursor"></div>
+    <div id="cursor-ring"></div>
+    <canvas id="canvas"></canvas>
+
+
+
+    <main>
+        <h1>MIDNIGHT<br>ZONE</h1>
+        <p>Unknown depths of design</p>
+    </main>
+
+
+
+
+
+
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const cursor = document.getElementById('cursor');
+        const cursorRing = document.getElementById('cursor-ring');
+
+        let width, height;
+        let mouse = { x: window.innerWidth/2, y: window.innerHeight/2 };
+
+        // Very heavy LERP for thick water feel
+        let cursorX = mouse.x, cursorY = mouse.y;
+
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+
+        // --- THE BIOLUMINESCENT SWARM CREATURES ---
+        class SwarmParticle {
+            constructor(creatureCenterX, creatureCenterY, hue) {
+                this.x = creatureCenterX + (Math.random() - 0.5) * 100;
+                this.y = creatureCenterY + (Math.random() - 0.5) * 100;
+
+
+                this.homeX = this.x; // Where it wants to be
+                this.homeY = this.y;
+                this.vx = 0; this.vy = 0;
+                this.radius = Math.random() * 3 + 1;
+                this.hue = hue + (Math.random() * 40 - 20); // Color variation
+                this.friction = 0.92; // Water resistance
+                this.exploded = false;
+            }
+
+
+            update(mouseX, mouseY) {
+
+                // 1. Calculate distance to mouse sonar
+                let dx = mouseX - this.x;
+                let dy = mouseY - this.y;
+                let distToMouse = Math.sqrt(dx*dx + dy*dy);
+                let sonarRange = 150;
+
+
+                // 2. THE INSANE INTERACTION: Explosion
+                if (distToMouse < sonarRange) {
+                    this.exploded = true;
+                    let force = (sonarRange - distToMouse) / sonarRange;
+                    // Massive repulsion force
+                    this.vx -= dx * force * 0.2;
+                    this.vy -= dy * force * 0.2;
+                    this.hue += 5; // Flash color when hit
+                }
+
+
+                // 3. Return to home formation slowly if exploded
+                if(this.exploded) {
+                    let homeDx = this.homeX - this.x;
+                    let homeDy = this.homeY - this.y;
+                    this.vx += homeDx * 0.005;
+                    this.vy += homeDy * 0.005;
+                    
+                    // If close to home and slow, reset explosion state
+                    if(Math.abs(homeDx) < 10 && Math.abs(this.vx) < 1) this.exploded = false;
+                }
+
+
+                // 4. Natural idling movement (drifting)
+                this.homeX += Math.sin(Date.now() * 0.001 + this.hue) * 0.5;
+                this.homeY += Math.cos(Date.now() * 0.002 + this.hue) * 0.5;
+
+
+                // 5. Apply Physics
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+
+
+
+            draw() {
+                // Use lighter composite op for glowing effect
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                // HSLA color for easy bioluminescent shifting
+                ctx.fillStyle = `hsla(${this.hue}, 100%, 50%, ${this.exploded ? 1 : 0.6})`;
+                ctx.shadowColor = `hsla(${this.hue}, 100%, 50%, 1)`;
+                ctx.shadowBlur = this.exploded ? 20 : 5;
+                ctx.fill();
+            }
+        }
+
+
+
+        // A "Creature" is just a container for many particles
+        class Creature {
+            constructor(x, y, particleCount, baseHue) {
+                this.particles = [];
+                for(let i=0; i<particleCount; i++) {
+                    this.particles.push(new SwarmParticle(x, y, baseHue));
+                }
+            }
+            updateAndDraw(mx, my) {
+                this.particles.forEach(p => {
+                    p.update(mx, my);
+                    p.draw();
+                });
+            }
+        }
+
+        let creatures = [];
+        // Marine snow particles
+        let debris = []; 
+
+
+
+        function init() {
+
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            
+            creatures = [];
+            // Create a few distinct swarm creatures
+            creatures.push(new Creature(width*0.2, height*0.3, 80, 180)); // Cyan swarm
+            creatures.push(new Creature(width*0.8, height*0.7, 100, 280)); // Purple swarm
+            creatures.push(new Creature(width*0.5, height*0.5, 60, 120)); // Green swarm
+
+            debris = [];
+             for(let i=0; i<200; i++) {
+                debris.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    speed: Math.random() * 0.5 + 0.1,
+                    alpha: Math.random() * 0.3
+                });
+            }
+        }
+
+
+
+
+        function animate() {
+            // Clear with very slight transparency for light trails
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = 'rgba(0, 2, 5, 0.3)'; 
+            ctx.fillRect(0, 0, width, height);
+
+            // 1. Draw Marine Snow (Debris)
+            ctx.fillStyle = 'white';
+            debris.forEach(d => {
+                d.y += d.speed;
+                if(d.y > height) d.y = 0;
+                ctx.globalAlpha = d.alpha;
+                ctx.fillRect(d.x, d.y, 1, 1);
+            });
+            ctx.globalAlpha = 1;
+
+            // 2. Update heavy cursor
+            cursorX += (mouse.x - cursorX) * 0.08;
+            cursorY += (mouse.y - cursorY) * 0.08;
+            cursor.style.transform = `translate(${cursorX - 10}px, ${cursorY - 10}px)`;
+            cursorRing.style.transform = `translate(${cursorX - 50}px, ${cursorY - 50}px)`;
+
+            // 3. Update and Draw Creatures passing the heavy cursor position
+            creatures.forEach(c => c.updateAndDraw(cursorX, cursorY));
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        animate();
+    </script>
+
+
+
+
+</body>
+</html>
