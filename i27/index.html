@@ -1,0 +1,239 @@
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L U M I N A | LED Matrix</title>
+    <style>
+        :root {
+            --bg: #030008;
+            --led-off: #160a26;
+            --led-on: #b800ff;
+            --led-hot: #ff00ea;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            cursor: none !important;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'SF Pro Display', -apple-system, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 1;
+        }
+
+        /*custom hardware cursor*/
+        #cursor-core {
+            position: fixed;
+            width: 4px; height: 4px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            box-shadow: 0 0 10px white, 0 0 20px var(--led-hot);
+        }
+
+        #cursor-ring {
+            position: fixed;
+            width: 60px; height: 60px;
+            border: 1px solid var(--led-on);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: inset 0 0 15px rgba(184, 0, 255, 0.2), 0 0 15px rgba(184, 0, 255, 0.2);
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: clamp(4rem, 12vw, 9rem);
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: transparent;
+            /*neon glowing text effect*/
+            -webkit-text-stroke: 2px rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 20px var(--led-on), 0 0 40px var(--led-on);
+        }
+
+        p {
+            margin-top: 1rem;
+            font-size: 1rem;
+            letter-spacing: 0.6em;
+            text-transform: uppercase;
+            color: var(--led-hot);
+            font-weight: 600;
+            text-shadow: 0 0 10px var(--led-hot);
+        }
+
+        /*scanline overlay for the hardware monitor feel*/
+        .scanlines {
+            position: fixed; inset: 0;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div id="cursor-core"></div>
+    <div id="cursor-ring"></div>
+    <canvas id="canvas"></canvas>
+
+    <main>
+        <h1>LUMINA</h1>
+        <p>Digital Light Systems</p>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const cCore = document.getElementById('cursor-core');
+        const cRing = document.getElementById('cursor-ring');
+
+        let width, height;
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let ringX = mouseX, ringY = mouseY;
+
+        //led grid settings
+        const spacing = 35;
+        let leds = [];
+
+        //this sets up the initial matrix
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            leds = [];
+
+            //calculate how many columns and rows we need
+            let cols = Math.floor(width / spacing) + 2;
+            let rows = Math.floor(height / spacing) + 2;
+
+            for(let i = 0; i < cols; i++) {
+                for(let j = 0; j < rows; j++) {
+                    leds.push({
+                        x: i * spacing,
+                        y: j * spacing,
+                        baseSize: 3
+                    });
+                }
+            }
+        }
+
+        //this tracks the user input
+        window.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        //this renders the hardware grid
+        function animate() {
+            //clear with deep black
+            ctx.fillStyle = '#030008';
+            ctx.fillRect(0, 0, width, height);
+
+            let time = Date.now() * 0.002;
+
+            //draw every led in the array
+            leds.forEach(led => {
+                //calculate distance from led to cursor
+                let dx = led.x - mouseX;
+                let dy = led.y - mouseY;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+
+                //create a baseline wave effect running across the screen
+                let wave = Math.sin((led.x * 0.01) + (led.y * 0.01) - time);
+                
+                //determine led state based on mouse proximity
+                let size = led.baseSize;
+                let alpha = 0.1 + (wave * 0.1); //default idle state
+                let color = '184, 0, 255'; //standard purple rgb
+
+                if(dist < 200) {
+                    //led is near the power source (cursor)
+                    let intensity = 1 - (dist / 200);
+                    size = led.baseSize + (intensity * 8);
+                    alpha = 0.2 + (intensity * 0.8);
+                    
+                    //shift color to hot pink if very close
+                    if(dist < 80) {
+                        color = '255, 0, 234'; 
+                    }
+                }
+
+                //draw the led dot
+                ctx.beginPath();
+                ctx.arc(led.x, led.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${color}, ${alpha})`;
+                
+                //add hardware glow if activated
+                if(dist < 200) {
+                    ctx.shadowColor = `rgba(${color}, 1)`;
+                    ctx.shadowBlur = 15;
+                } else {
+                    ctx.shadowBlur = 0;
+                }
+                
+                ctx.fill();
+            });
+
+            //this updates the custom hardware cursor
+            ringX += (mouseX - ringX) * 0.2;
+            ringY += (mouseY - ringY) * 0.2;
+            
+            cCore.style.transform = `translate(${mouseX - 2}px, ${mouseY - 2}px)`;
+            cRing.style.transform = `translate(${ringX - 30}px, ${ringY - 30}px)`;
+
+            requestAnimationFrame(animate);
+        }
+
+        //interactive click effect
+        window.addEventListener('mousedown', () => {
+            cRing.style.transform = `translate(${ringX - 30}px, ${ringY - 30}px) scale(0.5)`;
+            cRing.style.borderColor = 'white';
+        });
+        
+        window.addEventListener('mouseup', () => {
+            cRing.style.transform = `translate(${ringX - 30}px, ${ringY - 30}px) scale(1)`;
+            cRing.style.borderColor = 'var(--led-on)';
+        });
+
+        init();
+        animate();
+        window.addEventListener('resize', init);
+    </script>
+</body>
+</html>
