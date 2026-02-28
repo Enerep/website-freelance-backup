@@ -1,0 +1,349 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Swish | Minimal Basketball</title>
+    <style>
+        :root {
+            --bg: #020204;
+            --court-lines: #111827;
+            --ball: #ff5722;
+            --rim: #00f7ff;
+            --score: #ffffff;
+            --font: 'jetbrains mono', monospace;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            cursor: none !important; /* hide default cursor */
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: var(--font);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        canvas {
+            position: fixed; inset: 0; z-index: 1;
+        }
+
+
+
+        /* the basketball cursor */
+        #ball-cursor {
+            position: fixed;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--ball);
+            pointer-events: none;
+            z-index: 10000;
+            box-shadow: 0 0 20px rgba(255, 87, 34, 0.5);
+            /* custom basketball lines using css gradients */
+            background-image: 
+                linear-gradient(90deg, transparent 45%, #000 45%, #000 55%, transparent 55%),
+                linear-gradient(0deg, transparent 45%, #000 45%, #000 55%, transparent 55%),
+                radial-gradient(circle at center, transparent 40%, #000 40%, #000 50%, transparent 50%);
+            background-size: 100% 100%, 100% 100%, 140% 140%;
+            background-position: center;
+            will-change: transform;
+        }
+
+
+
+        /* ui overlay */
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 60px;
+            pointer-events: none;
+        }
+
+        .score-container {
+            position: fixed;
+            top: 40px; right: 60px;
+            text-align: right;
+            z-index: 10;
+        }
+
+        #score-label {
+            font-size: 0.8rem; letter-spacing: 0.3em; opacity: 0.5; text-transform: uppercase;
+        }
+
+        #score-value {
+            font-size: 4rem; font-weight: 800; color: var(--score);
+            transition: color 0.1s, transform 0.1s;
+        }
+
+        /* active class for scoring animation */
+        #score-value.scored {
+            color: var(--ball);
+            transform: scale(1.1);
+        }
+
+        h1 {
+            font-size: 6vw; font-weight: 200; letter-spacing: -2px;
+            line-height: 0.9;
+        }
+    </style>
+</head>
+
+
+
+
+
+
+<body>
+
+    <div id="ball-cursor"></div>
+    <canvas id="canvas"></canvas>
+
+    <div class="score-container">
+        <p id="score-label">pts</p>
+        <p id="score-value">00</p>
+    </div>
+
+    <main>
+        <h1>NEON<br>SWISH</h1>
+    </main>
+
+
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const ballCursor = document.getElementById('ball-cursor');
+        const scoreVal = document.getElementById('score-value');
+
+        let width, height;
+        let mouse = { x: 0, y: 0, oldX: 0, oldY: 0 };
+        // smooth lerp for the ball position
+        let ballX = 0, ballY = 0;
+        let ballRotation = 0;
+        let score = 0;
+        let isScoringCooldown = false;
+
+        // --- net physics vertices ---
+        let netNodes = [];
+        const netRows = 6;
+        const netCols = 7;
+        // static rim position at top center
+        const rimY = 150; 
+        const rimWidth = 100;
+
+
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            mouse.x = ballX = width / 2;
+            mouse.y = ballY = height / 2;
+
+            // initialize net vertices
+            netNodes = [];
+            for (let r = 0; r <= netRows; r++) {
+                for (let c = 0; c <= netCols; c++) {
+                    // normalize positions for the net shape
+                    let cx = (width / 2 - rimWidth / 2) + (c / netCols) * rimWidth;
+                    // taper the net towards the bottom
+                    let taper = 1 - (r / netRows) * 0.3;
+                    let centerXOffset = (width / 2) - cx;
+                    cx += centerXOffset * (1 - taper);
+
+                    netNodes.push({
+                        x: cx,
+                        y: rimY + (r * 15),
+                        homeX: cx, // original position
+                        homeY: rimY + (r * 15),
+                        vx: 0, vy: 0
+                    });
+                }
+            }
+        }
+
+        window.addEventListener('mousemove', e => {
+            mouse.oldX = mouse.x;
+            mouse.oldY = mouse.y;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        // --- particle system for scores ---
+        let particles = [];
+        function createExplosion(x, y) {
+            for(let i=0; i<30; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 50 + Math.random() * 20,
+                    color: i % 2 === 0 ? '#ff5722' : '#ffffff'
+                });
+            }
+        }
+
+        function drawScene() {
+            // clear background with trail effect
+            ctx.fillStyle = 'rgba(2, 2, 4, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+
+            // 1. draw court lines grid (minimalist perspective)
+            ctx.strokeStyle = varColor('--court-lines');
+            ctx.lineWidth = 1;
+            for (let i = 0; i < width; i += 80) {
+                // vertical perspective lines
+                ctx.beginPath();
+                ctx.moveTo(i, height);
+                ctx.lineTo(width / 2 + (i - width / 2) * 0.1, height * 0.4);
+                ctx.stroke();
+            }
+            for (let i = height; i > height * 0.4; i -= (height - i) * 0.2 + 10) {
+                // horizontal court lines
+                ctx.beginPath();
+                ctx.moveTo(0, i); ctx.lineTo(width, i);
+                ctx.stroke();
+            }
+
+            // 2. draw particles
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                p.vy += 0.2; // gravity
+                p.life--;
+                if(p.life <= 0) particles.splice(i, 1);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 2, 2);
+            });
+
+            // 3. update and draw the holographic hoop & net
+            const hoopCenterX = width / 2;
+
+            // draw rim (glowing cyan ellipse)
+            ctx.strokeStyle = varColor('--rim');
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.ellipse(hoopCenterX, rimY, rimWidth / 2, 15, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // apply physics and draw net mesh
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+
+            for (let r = 0; r <= netRows; r++) {
+                for (let c = 0; c <= netCols; c++) {
+                    const idx = r * (netCols + 1) + c;
+                    const node = netNodes[idx];
+
+                    if (r === 0) {
+                        // top row is attached to the rim
+                        node.x = node.homeX;
+                        node.y = node.homeY;
+                    } else {
+                        // physical nodes return home slowly
+                        node.vx += (node.homeX - node.x) * 0.05;
+                        node.vy += (node.homeY - node.y) * 0.05;
+                        node.vx *= 0.85; // damping/friction
+                        node.vy *= 0.85;
+                        node.x += node.vx;
+                        node.y += node.vy;
+                    }
+
+                    // draw horizontal connections
+                    if (c < netCols) {
+                        ctx.beginPath();
+                        ctx.moveTo(node.x, node.y);
+                        ctx.lineTo(netNodes[idx + 1].x, netNodes[idx + 1].y);
+                        ctx.stroke();
+                    }
+                    // draw vertical connections
+                    if (r < netRows) {
+                        ctx.beginPath();
+                        ctx.moveTo(node.x, node.y);
+                        ctx.lineTo(netNodes[idx + (netCols + 1)].x, netNodes[idx + (netCols + 1)].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // 4. scoring logic (the insane part)
+            const ballRadius = 20;
+            const hoopX = hoopCenterX;
+            
+            if (!isScoringCooldown) {
+                //this forces it to only count when going bottom to top.
+                //if you want top to bottom instead, use: if (mouse.oldY < rimY && mouse.y > rimY)
+                if (mouse.oldY < rimY && mouse.y > rimY) {
+                    
+                    //this checks horizontal alignment
+                    if (Math.abs(mouse.x - hoopX) < (rimWidth / 2)) {
+                        
+                        //score detected!
+                        score++;
+                        scoreVal.innerText = score.toString().padStart(2, '0');
+                        isScoringCooldown = true;
+
+                        //this triggers the swish animation payoff
+                        createExplosion(hoopX, rimY);
+                        scoreVal.classList.add('scored');
+                        setTimeout(() => scoreVal.classList.remove('scored'), 300);
+
+                        //this triggers the net ripple physics
+                        netNodes.forEach(node => {
+                            if(node.y > rimY) { 
+                                node.vx += (Math.random() - 0.5) * 30;
+                                //this pushes the net upwards to match the ball direction
+                                node.vy -= Math.random() * 20 + 10; 
+                            }
+                        });
+
+                        //this prevents double scoring on one motion
+                        setTimeout(() => isScoringCooldown = false, 500); 
+                    }
+                }
+            }
+
+            // 5. update basketball cursor appearance
+            // add resistance to the ball movement
+            ballX += (mouse.x - ballX) * 0.2;
+            ballY += (mouse.y - ballY) * 0.2;
+            
+            // rotate ball based on horizontal mouse velocity
+            let speedX = mouse.x - mouse.oldX;
+            ballRotation += speedX * 0.5;
+
+            ballCursor.style.transform = `translate(${ballX - 20}px, ${ballY - 20}px) rotate(${ballRotation}deg)`;
+        }
+
+        function animate() {
+            drawScene();
+            requestAnimationFrame(animate);
+        }
+
+        // helper to get css variables
+        function varColor(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        init();
+        animate();
+        window.addEventListener('resize', init);
+
+    </script>
+</body>
+</html>
