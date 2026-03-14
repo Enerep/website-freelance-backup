@@ -1,0 +1,310 @@
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebula_Mind | AI Typography</title>
+    
+    
+    <style>
+        :root {
+            --bg: #010103;
+            --prompt-bg: #0a0a0c;
+            --accent: #00ff41; /* matrix green */
+            --glitch-1: #ff00ff;
+            --glitch-2: #00ffff;
+            --text-main: #e0e0e0;
+            --font: 'jetbrains mono', monospace;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            cursor: none !important; /* hide native cursor */
+        }
+
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: var(--font);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        canvas {
+            position: fixed; inset: 0; z-index: 1;
+        }
+
+
+
+        /* custom reticle cursor */
+        #cursor-reticle {
+            position: fixed;
+            width: 30px; height: 30px;
+            border: 1px solid var(--accent);
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+            transition: width 0.2s, height 0.2s, background 0.2s;
+            /* hexagon shape */
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+
+        #cursor-reticle::after {
+            content: '';
+            position: absolute; inset: 4px;
+            background: rgba(0, 255, 65, 0.1);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+
+        /* ui overlay - prompt bar */
+        main {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%;
+            padding: 30px;
+            z-index: 10;
+            pointer-events: none; /* let clicks pass through to input */
+        }
+
+        .input-container {
+            width: 100%; max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            pointer-events: auto; /* re-enable pointer for input */
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 15px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            background: var(--prompt-bg);
+            border: 1px solid #1a1a1c;
+            padding: 15px 15px 15px 40px;
+            color: white;
+            font-family: var(--font);
+            font-size: 1rem;
+            outline: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+        }
+
+        /* title overlay */
+        h1 {
+            position: fixed;
+            top: 40px; left: 40px;
+            font-size: 1rem; font-weight: 200;
+            letter-spacing: 0.3em;
+            color: var(--accent);
+            opacity: 0.5;
+            z-index: 5;
+        }
+    </style>
+</head>
+
+
+
+<body>
+
+    <div id="cursor-reticle"></div>
+    <canvas id="canvas"></canvas>
+
+    <h1>NEBULA_MIND v0.1</h1>
+
+    <main>
+        <div class="input-container">
+            <span class="input-prefix">&gt;</span>
+            <input type="text" id="chat-input" placeholder="inject word_..." maxlength="20">
+        </div>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const reticle = document.getElementById('cursor-reticle');
+        const input = document.getElementById('chat-input');
+
+        let width, height;
+        let mouse = { x: 0, y: 0 };
+        let reticleX = 0, reticleY = 0;
+
+        // --- word nebula physics ---
+        let words = [];
+        const maxWords = 50; // prevent clutter
+        let nebulaRotation = 0;
+
+        // base words to start with
+        const initialWords = ["compute", "analyze", "generate", "process", "intelligence", "network", "data", "synthesis"];
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            
+            words = [];
+            initialWords.forEach((w, i) => injectWord(w, true)); // seed background
+        }
+
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        // custom prompt interaction
+        input.addEventListener('focus', () => {
+            reticle.style.width = '60px';
+            reticle.style.height = '60px';
+            reticle.style.background = 'rgba(0, 255, 65, 0.05)';
+        });
+        input.addEventListener('blur', () => {
+            reticle.style.width = '30px';
+            reticle.style.height = '30px';
+            reticle.style.background = 'transparent';
+        });
+
+        // the "inject" logic
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && input.value.trim() !== '') {
+                injectWord(input.value.trim(), false);
+                input.value = ''; // clear prompt
+            }
+        });
+
+        function injectWord(text, isSeeding) {
+            // manage word count
+            if (words.length >= maxWords) words.shift(); // remove oldest
+
+            const newWord = {
+                text: text,
+                // random 3d coordinates (normalized -1 to 1)
+                x3d: (Math.random() - 0.5) * 2,
+                y3d: (Math.random() - 0.5) * 2,
+                z3d: (Math.random() - 0.5) * 2,
+                // animation properties
+                opacity: 0,
+                targetOpacity: 1,
+                // glitch effect properties
+                glitchTimer: isSeeding ? 0 : 20, // no glitch on initial seed
+                scale: isSeeding ? 1 : 0 // grow from zero if injected
+            };
+            words.push(newWord);
+        }
+
+        function drawScene() {
+            ctx.fillStyle = varColor('--bg');
+            ctx.fillRect(0, 0, width, height);
+
+            // update rotation
+            nebulaRotation += 0.002;
+
+            // smooth reticle movement
+            reticleX += (mouse.x - reticleX) * 0.2;
+            reticleY += (mouse.y - reticleY) * 0.2;
+            reticle.style.left = `${reticleX}px`;
+            reticle.style.top = `${reticleY}px`;
+
+            // render background words
+            words.forEach(w => {
+                // apply rotation to x and z for 3d effect
+                let cosR = Math.cos(nebulaRotation);
+                let sinR = Math.sin(nebulaRotation);
+                
+                let rotatedX = w.x3d * cosR - w.z3d * sinR;
+                let rotatedZ = w.x3d * sinR + w.z3d * cosR;
+
+                // project 3d to 2d (simple perspective)
+                let perspectiveFactor = 1 / (rotatedZ + 3); // +3 is camera distance
+                let screenX = (rotatedX * perspectiveFactor * width * 0.5) + width / 2;
+                let screenY = (w.y3d * perspectiveFactor * height * 0.5) + height / 2;
+
+                // update opacity and scale
+                w.opacity += (w.targetOpacity - w.opacity) * 0.1;
+                if(w.scale < 1) w.scale += 0.05;
+
+                // handle depth cues (fade and shrink in distance)
+                // depth value between 0 (far) and 1 (close)
+                let depthNormalized = (rotatedZ + 1) / 2; // -1to1 -> 0to1
+                let finalOpacity = w.opacity * (depthNormalized * 0.7 + 0.3);
+                let finalSize = perspectiveFactor * 40 * w.scale;
+
+
+                
+                // set font
+                ctx.font = `${finalSize}px ${varColor('--font')}`;
+                ctx.textAlign = 'center';
+
+                // --- glitch rendering logic ---
+                if (w.glitchTimer > 0) {
+                    w.glitchTimer--;
+                    if (Math.random() > 0.5) {
+                        // chromatic aberration split
+                        ctx.fillStyle = varColor('--glitch-1');
+                        ctx.fillText(w.text, screenX + (Math.random()-0.5)*10, screenY);
+                        ctx.fillStyle = varColor('--glitch-2');
+                        ctx.fillText(w.text, screenX - (Math.random()-0.5)*10, screenY);
+                        // skip main render this frame for glitch look
+                        return; 
+                    }
+                }
+
+                // --- standard render ---
+                // add glow near reticle
+                let dx = screenX - reticleX;
+                let dy = screenY - reticleY;
+                let distToMouse = Math.sqrt(dx*dx + dy*dy);
+                
+                ctx.shadowBlur = distToMouse < 200 ? (200 - distToMouse) / 10 : 0;
+                ctx.shadowColor = varColor('--accent');
+                
+                // main color
+                ctx.fillStyle = `rgba(224, 224, 224, ${finalOpacity})`;
+                ctx.fillText(w.text, screenX, screenY);
+                
+                // reset shadow
+                ctx.shadowBlur = 0;
+            });
+        }
+
+        function animate() {
+            drawScene();
+            requestAnimationFrame(animate);
+        }
+
+        // helper to get css variables
+        function varColor(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        init();
+        animate();
+        window.addEventListener('resize', init);
+
+
+
+    </script>
+</body>
+
+
+</html>
