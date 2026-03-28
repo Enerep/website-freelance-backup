@@ -1,552 +1,387 @@
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio</title>
-
-
-
+    <title>Abyssal Crisp | Portfolio</title>
     <style>
+        :root {
+            --cyan: #06b6d4;
+            --blue: #3b82f6;
+            --purple: #8b5cf6;
+            --dark: #020617;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            cursor: none !important; /*hide default cursor*/
+            -webkit-font-smoothing: antialiased; /*makes text super crisp*/
+            -moz-osx-font-smoothing: grayscale;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
             overflow-x: hidden;
-            background: #0a192f;
+            background: var(--dark);
             color: #fff;
             min-height: 100vh;
         }
 
-        /*animated water gradient bg */
-        .water-bg {
+        /*custom fluid cursor*/
+        #cursor-ring {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -3;
-            background: linear-gradient(45deg, #0a192f, #1a365d, #2563eb, #06b6d4, #0891b2);
-            background-size: 400% 400%;
-            animation: waterFlow 20s ease infinite;
-        }
-
-        @keyframes waterFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-
-
-
-        /*caustics effect - underwater light */
-        .caustics {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            opacity: 0.3;
-            background-image: 
-                radial-gradient(circle at 20% 50%, transparent 20%, rgba(6, 182, 212, 0.4) 21%, rgba(6, 182, 212, 0.4) 34%, transparent 35%),
-                radial-gradient(circle at 60% 80%, transparent 20%, rgba(14, 165, 233, 0.4) 21%, rgba(14, 165, 233, 0.4) 34%, transparent 35%),
-                radial-gradient(circle at 80% 20%, transparent 20%, rgba(56, 189, 248, 0.4) 21%, rgba(56, 189, 248, 0.4) 34%, transparent 35%);
-            background-size: 200px 200px, 300px 300px, 250px 250px;
-            animation: causticMove 15s ease-in-out infinite;
-        }
-
-        @keyframes causticMove {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(50px, -30px) scale(1.1); }
-            66% { transform: translate(-30px, 50px) scale(0.9); }
-        }
-
-        /* bubble canvas */
-        #bubbleCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
+            width: 30px; height: 30px;
+            border: 2px solid var(--cyan);
+            border-radius: 50%;
             pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background 0.2s;
+            mix-blend-mode: screen;
+            box-shadow: 0 0 10px var(--cyan);
         }
-
-
-
-
-
-        /* wave animation at bottom */
-        .waves {
+        
+        #cursor-dot {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 200px;
-            z-index: -1;
-            opacity: 0.6;
+            width: 4px; height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
         }
 
+        /*deep water background*/
+        .water-bg {
+            position: fixed; inset: 0; z-index: -3;
+            background: radial-gradient(circle at 50% 0%, #0f2c59 0%, var(--dark) 80%);
+        }
+
+        /*high performance canvas*/
+        #fluidCanvas {
+            position: fixed; inset: 0; z-index: -2;
+            pointer-events: none;
+            /*mix-blend-mode adds that crisp light interaction*/
+            mix-blend-mode: screen; 
+        }
+
+        /*crisp svg waves*/
+        .waves {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 15vh;
+            z-index: -1; pointer-events: none;
+        }
         .wave {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 200%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="rgba(6, 182, 212, 0.3)"/></svg>') repeat-x;
-            animation: wave 25s linear infinite;
+            position: absolute; bottom: 0; left: 0; width: 200%; height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="rgba(6, 182, 212, 0.15)"/></svg>') repeat-x;
+            animation: wave 20s linear infinite;
         }
-
         .wave:nth-child(2) {
-            bottom: 10px;
-            animation: wave 20s linear reverse infinite;
-            opacity: 0.5;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="rgba(14, 165, 233, 0.3)"/></svg>') repeat-x;
+            bottom: -10px; opacity: 0.5; animation-direction: reverse; animation-duration: 25s;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="rgba(59, 130, 246, 0.15)"/></svg>') repeat-x;
         }
+        @keyframes wave { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        .wave:nth-child(3) {
-            bottom: 20px;
-            animation: wave 30s linear infinite;
-            opacity: 0.3;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="rgba(56, 189, 248, 0.3)"/></svg>') repeat-x;
-        }
-
-        @keyframes wave {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-
-
-
-        /* main content */
+        /*main layout*/
         .container {
-            position: relative;
-            z-index: 1;
+            position: relative; z-index: 1;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
+            display: flex; justify-content: center; align-items: center;
+            perspective: 1000px; /*required for 3d tilt*/
         }
 
-        /* glassmorphic card */
+        /*sharp glassmorphic card*/
         .glass-card {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(10, 20, 40, 0.4);
             backdrop-filter: blur(20px);
-            border-radius: 30px;
-            border: 2px solid rgba(255, 255, 255, 0.15);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            /*crisp 1px border*/
+            border: 1px solid rgba(255, 255, 255, 0.1); 
             padding: 4rem 3rem;
             max-width: 800px;
-            box-shadow: 
-                0 8px 32px 0 rgba(31, 38, 135, 0.37),
-                inset 0 0 20px rgba(255, 255, 255, 0.05);
-            animation: floatIn 1.5s ease-out, gentleFloat 6s ease-in-out infinite;
-            animation-delay: 0s, 1.5s;
+            text-align: center;
+            /*the dynamic spotlight using css vars*/
+            background-image: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(6, 182, 212, 0.15) 0%, transparent 50%);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255,255,255,0.2);
+            /*smooth return when mouse leaves*/
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
             transform-style: preserve-3d;
-            position: relative;
-            overflow: hidden;
         }
-
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                45deg,
-                transparent,
-                rgba(255, 255, 255, 0.1),
-                transparent
-            );
-            animation: shimmer 8s infinite;
-        }
-
-
-
-        @keyframes shimmer {
-            0% { transform: rotate(0deg) translate(-50%, -50%); }
-            100% { transform: rotate(360deg) translate(-50%, -50%); }
-        }
-
-        @keyframes floatIn {
-            from {
-                opacity: 0;
-                transform: translateY(100px) scale(0.8);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        @keyframes gentleFloat {
-            0%, 100% { transform: translateY(0px) rotateX(0deg); }
-            50% { transform: translateY(-20px) rotateX(2deg); }
-        }
-
-
-
 
         h1 {
-            font-size: 4rem;
-            font-weight: 700;
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
+            background: linear-gradient(135deg, #fff, var(--cyan));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: titleWave 3s ease-in-out infinite;
-            position: relative;
-            z-index: 1;
-        }
-
-        @keyframes titleWave {
-            0%, 100% { filter: hue-rotate(0deg); }
-            50% { filter: hue-rotate(20deg); }
+            /*pop the text out in 3d*/
+            transform: translateZ(30px); 
         }
 
         .subtitle {
-            font-size: 1.5rem;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 2rem;
-            animation: fadeInUp 1s ease-out 0.3s both;
-            position: relative;
-            z-index: 1;
+            font-size: 1.2rem;
+            color: var(--cyan);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            transform: translateZ(20px);
         }
 
         .description {
-            font-size: 1.1rem;
-            line-height: 1.8;
+            font-size: 1.1rem; line-height: 1.6;
             color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 2rem;
-            animation: fadeInUp 1s ease-out 0.6s both;
-            position: relative;
-            z-index: 1;}
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            margin-bottom: 2.5rem;
+            max-width: 500px; margin-inline: auto;
+            transform: translateZ(10px);
         }
 
-        /* CTA buttons */
+        /*crisp buttons*/
         .cta-buttons {
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-            justify-content: center;
-            animation: fadeInUp 1s ease-out 0.9s both;
-            position: relative;
-            z-index: 1;
+            display: flex; gap: 1.5rem; justify-content: center;
+            transform: translateZ(25px);
         }
 
         .btn {
             padding: 1rem 2.5rem;
-            font-size: 1.1rem;
-            border: none;
+            font-size: 1rem; font-weight: 600; letter-spacing: 0.05em;
             border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-decoration: none;
-            color: white;
-            font-weight: 600;
-            position: relative;
-            overflow: hidden;
+            cursor: none; /*custom cursor takes over*/
+            transition: all 0.3s ease;
+            text-decoration: none; color: white;
+            position: relative; overflow: hidden;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #06b6d4, #3b82f6);
-            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.4);
+            background: var(--cyan);
+            border: 1px solid var(--cyan);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            color: var(--dark);
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn:hover::before {
-            width: 300px;
-            height: 300px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
         }
 
         .btn:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 20px 40px rgba(6, 182, 212, 0.6);
+            transform: translateY(-2px);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.6);
+            background: #fff; border-color: #fff;
+        }
+        .btn-secondary:hover {
+            border-color: #fff; background: rgba(255,255,255,0.1);
         }
 
-        .btn span {
-            position: relative;
-            z-index: 1;
-        }
-
-        /*floating particles */
-        .particle {
-            position: fixed;
-            border-radius: 50%;
-            pointer-events: none;
-            opacity: 0.6;
-            animation: float 10s infinite ease-in-out;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0) translateX(0) scale(1); }
-            25% { transform: translateY(-30px) translateX(20px) scale(1.1); }
-            50% { transform: translateY(-60px) translateX(-20px) scale(0.9); }
-            75% { transform: translateY(-30px) translateX(20px) scale(1.1); }
-        }
-
-        /*ripple effect */
-        .ripple {
-            position: fixed;
-            border-radius: 50%;
-            border: 2px solid rgba(6, 182, 212, 0.6);
-            pointer-events: none;
-            animation: rippleEffect 1.5s ease-out;
-        }
-
-        @keyframes rippleEffect {
-            from {
-                width: 0;
-                height: 0;
-                opacity: 1;
-            }
-            to {
-                width: 300px;
-                height: 300px;
-                opacity: 0;
-            }
-        }
-
-        /*responsive */
-        @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            .subtitle { font-size: 1.2rem; }
-            .glass-card { padding: 2rem 1.5rem; }
-            .cta-buttons { flex-direction: column; }
-        }
     </style>
 </head>
-
-
-
-
-
 <body>
-    <!--animated water bg -->
+
     <div class="water-bg"></div>
+    <canvas id="fluidCanvas"></canvas>
     
-    <!-- caustics effect -->
-    <div class="caustics"></div>
-    
-    <!-- Bubble Canvas -->
-    <canvas id="bubbleCanvas"></canvas>
-    
-    <!-- waves -->
+    <div id="cursor-ring"></div>
+    <div id="cursor-dot"></div>
+
     <div class="waves">
-        <div class="wave"></div>
         <div class="wave"></div>
         <div class="wave"></div>
     </div>
 
-    <!-- main stuff -->
     <div class="container">
-        <div class="glass-card">
-            <h1>Welcome Aboard</h1>
-            <div class="subtitle">Dive into my world of creativity</div>
+        <div class="glass-card" id="card">
+            <h1>Deep Current</h1>
+            <div class="subtitle">Fluid Architecture</div>
             <p class="description">
-                I'm a portfolio website. Pat
+                Crafting hyper-crisp, interactive digital experiences that flow seamlessly. 
             </p>
             <div class="cta-buttons">
-                <button class="btn btn-primary" onclick="createRipple(event)">
-                    <span>View My Work</span>
-                </button>
-                <button class="btn btn-secondary" onclick="createRipple(event)">
-                    <span>Get In Touch</span>
-                </button>
+                <a href="#" class="btn btn-primary interactive">View Work</a>
+                <a href="#" class="btn btn-secondary interactive">Contact</a>
             </div>
         </div>
     </div>
 
-
-
-
     <script>
-        // bubble canvas animation
-        const canvas = document.getElementById('bubbleCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        //custom cursor logic
+        const ring = document.getElementById('cursor-ring');
+        const dot = document.getElementById('cursor-dot');
+        let mouseX = window.innerWidth/2;
+        let mouseY = window.innerHeight/2;
+        let ringX = mouseX, ringY = mouseY;
 
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            dot.style.left = mouseX + 'px';
+            dot.style.top = mouseY + 'px';
         });
 
+        //smooth lerp for cursor ring
+        function animateCursor() {
+            ringX += (mouseX - ringX) * 0.2;
+            ringY += (mouseY - ringY) * 0.2;
+            ring.style.left = ringX + 'px';
+            ring.style.top = ringY + 'px';
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
 
+        //interactive hover states for buttons
+        document.querySelectorAll('.interactive').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                ring.style.width = '50px';
+                ring.style.height = '50px';
+                ring.style.background = 'rgba(6, 182, 212, 0.1)';
+            });
+            el.addEventListener('mouseleave', () => {
+                ring.style.width = '30px';
+                ring.style.height = '30px';
+                ring.style.background = 'transparent';
+            });
+        });
 
+        //3d glass card tilt physics
+        const card = document.getElementById('card');
+        document.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            //calculate mouse position relative to card center
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            //update css variables for the inner spotlight
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
+
+            //calculate tilt (only if mouse is relatively close to card)
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const distance = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+            
+            if (distance < 600) {
+                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -8; //max 8 deg tilt
+                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 8;
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            } else {
+                card.style.transform = `rotateX(0deg) rotateY(0deg)`;
+            }
+        });
+
+        //high performance crisp canvas physics
+        const canvas = document.getElementById('fluidCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        //crisp bubble class
         class Bubble {
             constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = canvas.height + Math.random() * 100;
-                this.size = Math.random() * 40 + 10;
-                this.speedY = Math.random() * 2 + 1;
-                this.speedX = Math.random() * 2 - 1;
-                this.opacity = Math.random() * 0.5 + 0.2;
-                this.wobble = Math.random() * 0.05;
-                this.wobbleSpeed = Math.random() * 0.05 + 0.02;
+                this.reset();
+                this.y = Math.random() * height; //initial random placement
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = height + 50;
+                this.size = Math.random() * 8 + 2; //smaller, crisper bubbles
+                this.speed = (Math.random() * 1.5 + 0.5) * (15 / this.size); //smaller rise faster
+                this.wobblePhase = Math.random() * Math.PI * 2;
+                this.wobbleSpeed = Math.random() * 0.02 + 0.01;
+                this.wobbleAmp = Math.random() * 1.5;
+                this.vx = 0; this.vy = 0; //physics velocity
             }
 
             update() {
-                this.y -= this.speedY;
-                this.x += Math.sin(this.y * this.wobble) * this.wobbleSpeed;
-                
-                if (this.y + this.size < 0) {
-                    this.y = canvas.height + Math.random() * 100;
-                    this.x = Math.random() * canvas.width;
+                //natural rise
+                this.y -= this.speed;
+                //sine wave wobble
+                this.wobblePhase += this.wobbleSpeed;
+                this.x += Math.sin(this.wobblePhase) * this.wobbleAmp;
+
+                //fluid physics: mouse collision
+                let dx = mouseX - this.x;
+                let dy = mouseY - this.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist < 100) {
+                    let force = (100 - dist) / 100;
+                    this.vx -= (dx / dist) * force * 2;
+                    this.vy -= (dy / dist) * force * 2;
                 }
+
+                //apply velocity and friction
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.9;
+                this.vy *= 0.9;
+
+                //reset if off screen
+                if (this.y < -50) this.reset();
             }
 
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                const gradient = ctx.createRadialGradient(
-                    this.x - this.size / 3,
-                    this.y - this.size / 3,
-                    0,
-                    this.x,
-                    this.y,
-                    this.size
-                );
-                gradient.addColorStop(0, `rgba(255, 255, 255, ${this.opacity})`);
-                gradient.addColorStop(0.5, `rgba(6, 182, 212, ${this.opacity * 0.5})`);
-                gradient.addColorStop(1, `rgba(59, 130, 246, ${this.opacity * 0.2})`);
-                ctx.fillStyle = gradient;
-                ctx.fill();
                 
-                // Highlight
+                //crisp vector outlines instead of blurry gradients
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                //sharp white specular highlight (makes it look like glass/water)
                 ctx.beginPath();
-                ctx.arc(this.x - this.size / 4, this.y - this.size / 4, this.size / 4, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity * 0.6})`;
+                ctx.arc(this.x - this.size*0.3, this.y - this.size*0.3, this.size*0.2, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
                 ctx.fill();
             }
         }
 
-        const bubbles = [];
-        for (let i = 0; i < 50; i++) {
-            bubbles.push(new Bubble());
-        }
+        const bubbles = Array.from({ length: 60 }, () => new Bubble());
 
-        function animateBubbles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            bubbles.forEach(bubble => {
-                bubble.update();
-                bubble.draw();
+        //render loop
+        function drawScene() {
+            ctx.clearRect(0, 0, width, height);
+
+            //draw volumetric light rays (caustics replacement)
+            const time = Date.now() * 0.0005;
+            for(let i = 0; i < 5; i++) {
+                let rayX = (width * 0.2 * i) + Math.sin(time + i) * 100;
+                let gradient = ctx.createLinearGradient(rayX, 0, rayX + 200, height);
+                gradient.addColorStop(0, 'rgba(6, 182, 212, 0.08)');
+                gradient.addColorStop(1, 'transparent');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.moveTo(rayX - 100, 0);
+                ctx.lineTo(rayX + 100, 0);
+                ctx.lineTo(rayX + 300, height);
+                ctx.lineTo(rayX - 100, height);
+                ctx.fill();
+            }
+
+            //update & draw crisp bubbles
+            bubbles.forEach(b => {
+                b.update();
+                b.draw();
             });
-            
-            requestAnimationFrame(animateBubbles);
+
+            requestAnimationFrame(drawScene);
         }
 
-        animateBubbles();
-
-        //floating particles
-        function createFloatingParticles() {
-            for (let i = 0; i < 20; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                const size = Math.random() * 6 + 2;
-                particle.style.width = size + 'px';
-                particle.style.height = size + 'px';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.background = `rgba(${Math.random() * 100 + 155}, ${Math.random() * 100 + 155}, 255, 0.6)`;
-                particle.style.animationDelay = Math.random() * 5 + 's';
-                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-                document.body.appendChild(particle);
-            }
-        }
-
-        createFloatingParticles();
-
-        // ripple effect on click
-        function createRipple(e) {
-            const ripple = document.createElement('div');
-            ripple.className = 'ripple';
-            ripple.style.left = (e.clientX - 150) + 'px';
-            ripple.style.top = (e.clientY - 150) + 'px';
-            document.body.appendChild(ripple);
-            
-            setTimeout(() => ripple.remove(), 1500);
-        }
-
-        // mouse move effect - interactive h20
-        let mouseX = 0;
-        let mouseY = 0;
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-            
-            // add occasional bubble on mouse movement
-            if (Math.random() > 0.95) {
-                const bubble = new Bubble();
-                bubble.x = mouseX;
-                bubble.y = mouseY;
-                bubble.speedY = Math.random() * 3 + 2;
-                bubbles.push(bubble);
-                if (bubbles.length > 100) bubbles.shift();
-            }
-        });
-
-
-
-
-
-
-        
-        //add glowing effect to card on mouse move
-        const glassCard = document.querySelector('.glass-card');
-        document.addEventListener('mousemove', (e) => {
-            const rect = glassCard.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            glassCard.style.setProperty('--mouse-x', x + 'px');
-            glassCard.style.setProperty('--mouse-y', y + 'px');
-        });
+        drawScene();
     </script>
 </body>
 </html>
