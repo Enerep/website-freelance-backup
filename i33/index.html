@@ -1,0 +1,343 @@
+<!--
+the math behind the candles: 
+
+instead of just drawing lines, it actually generates real Open, High, Low, and Close (OHLC) data dynamically every single frame based on a random walk algorithm.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Velocity | HFT Simulator</title>
+    <style>
+        :root {
+            --bg: #030508;
+            --bull: #00ff41; /* nmg */
+            --bear: #ff003c; /* Cyberpunk Red */
+            --grid: #111a22;
+            --text: #a0b2c6;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            user-select: none;
+            cursor: crosshair;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        canvas {
+            position: fixed; inset: 0; z-index: 1;
+        }
+
+        /* overlay UI */
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px;
+            pointer-events: none;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .ticker-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 3rem; font-weight: 900; letter-spacing: 2px;
+            color: #fff; margin-bottom: 5px;
+        }
+
+        #price-display {
+            font-size: 4rem; font-weight: bold;
+            transition: color 0.1s;
+            text-shadow: 0 0 20px currentColor;
+        }
+
+        .stats {
+            text-align: right;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .controls {
+            text-align: center;
+            font-size: 0.8rem;
+            letter-spacing: 0.2em;
+            color: rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+        }
+
+        /* static scanlines overlay */
+        .scanlines {
+            position: fixed; inset: 0; z-index: 20; pointer-events: none;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <div class="scanlines"></div>
+    <canvas id="chart"></canvas>
+
+    <main>
+        <header>
+            <div class="ticker-info">
+                <h1>$VOID</h1>
+                <div id="price-display" style="color: var(--bull)">0.00</div>
+            </div>
+            <div class="stats" id="order-book">
+                </div>
+        </header>
+        <div class="controls">
+            [Y-AXIS]: Market Sentiment | [X-AXIS]: High Frequency Tick Rate
+        </div>
+    </main>
+
+
+
+    <script>
+        const canvas = document.getElementById('chart');
+        const ctx = canvas.getContext('2d', { alpha: false }); 
+        const priceDisplay = document.getElementById('price-display');
+        const orderBook = document.getElementById('order-book');
+
+        let width, height;
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+
+        // market variables
+        let currentPrice = 10000;
+        let cameraPrice = 10000; // NEW: dynamic camera anchor
+        let candles = [];
+        const candleWidth = 12;
+        const candleSpacing = 4;
+        let offset = 0; 
+        let tickSpeed = 1; 
+        let sentiment = 0; 
+
+        // colors from CSS
+        const getVar = (name) => getComputedStyle(document.body).getPropertyValue(name).trim();
+        let colorBull, colorBear, colorGrid, colorBg;
+
+        class Candle {
+            constructor(open) {
+                this.open = open;
+                this.close = open;
+                this.high = open;
+                this.low = open;
+                this.isClosed = false;
+                this.ticks = 0;
+            }
+
+            update(price) {
+                this.close = price;
+                if (price > this.high) this.high = price;
+                if (price < this.low) this.low = price;
+                this.ticks++;
+            }
+
+            draw(x, scaleY, midY, basePrice) {
+                const isBull = this.close >= this.open;
+                const color = isBull ? colorBull : colorBear;
+                
+                // map prices to canvas Y coordinates using dynamic cameraPrice
+                const yOpen = midY - (this.open - basePrice) * scaleY;
+                const yClose = midY - (this.close - basePrice) * scaleY;
+                const yHigh = midY - (this.high - basePrice) * scaleY;
+                const yLow = midY - (this.low - basePrice) * scaleY;
+
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = color;
+                ctx.fillStyle = color;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+
+                // draw wick
+                ctx.beginPath();
+                ctx.moveTo(x, yHigh);
+                ctx.lineTo(x, yLow);
+                ctx.stroke();
+
+                // draw body
+                const bodyTop = Math.min(yOpen, yClose);
+                const bodyHeight = Math.max(Math.abs(yOpen - yClose), 2); // min 2px height
+                ctx.fillRect(x - candleWidth/2, bodyTop, candleWidth, bodyHeight);
+                ctx.shadowBlur = 0; 
+            }
+        }
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            
+            colorBull = getVar('--bull');
+            colorBear = getVar('--bear');
+            colorGrid = getVar('--grid');
+            colorBg = getVar('--bg');
+
+            candles = []; // reset array on resize
+            let startPrice = 10000;
+            const numCandles = Math.ceil(width / (candleWidth + candleSpacing)) + 2;
+            for(let i = 0; i < numCandles; i++) {
+                let c = new Candle(startPrice);
+                c.close = startPrice + (Math.random() - 0.5) * 50;
+                c.high = Math.max(c.open, c.close) + Math.random() * 20;
+                c.low = Math.min(c.open, c.close) - Math.random() * 20;
+                c.isClosed = true;
+                candles.push(c);
+                startPrice = c.close;
+            }
+            currentPrice = startPrice;
+            cameraPrice = currentPrice;
+        }
+
+        window.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            tickSpeed = 1 + (mouseX / width) * 14;
+            sentiment = ((height/2 - mouseY) / (height/2)) * 10; 
+        });
+
+        function updateMarket() {
+            let currentCandle = candles[candles.length - 1];
+
+            for(let i=0; i<tickSpeed; i++) {
+                let volatility = 2 + Math.abs(sentiment);
+                let priceDelta = (Math.random() - 0.5) * volatility * 2 + (sentiment * 0.2);
+                currentPrice += priceDelta;
+                currentCandle.update(currentPrice);
+                offset -= 1;
+
+                const totalSpacing = candleWidth + candleSpacing;
+                if (offset <= -totalSpacing) {
+                    offset += totalSpacing;
+                    currentCandle.isClosed = true;
+                    candles.shift();
+                    candles.push(new Candle(currentPrice));
+                    currentCandle = candles[candles.length - 1];
+                }
+            }
+
+            // SMOOTH CAMERA CHASE: Camera price lerps toward current price
+            cameraPrice += (currentPrice - cameraPrice) * 0.05;
+
+            priceDisplay.innerText = currentPrice.toFixed(2);
+            priceDisplay.style.color = currentPrice >= candles[candles.length-2].close ? colorBull : colorBear;
+
+            if(Math.random() > 0.8) {
+                let obHTML = 'ORDER BOOK DATA<br><br>';
+                for(let i=0; i<8; i++) {
+                    let type = Math.random() > 0.5 ? 'ASK' : 'BID';
+                    let col = type === 'ASK' ? colorBear : colorBull;
+                    let sz = (Math.random() * 50).toFixed(4);
+                    let px = (currentPrice + (Math.random()-0.5)*20).toFixed(2);
+                    obHTML += `<span style="color:${col}">${type}</span> ${sz} @ ${px}<br>`;
+                }
+                orderBook.innerHTML = obHTML;
+            }
+        }
+
+        function drawGrid(midY, scaleY) {
+            ctx.strokeStyle = colorGrid;
+            ctx.lineWidth = 1;
+            
+            // vertical panning lines
+            const totalSpacing = candleWidth + candleSpacing;
+            for(let x = offset % 50; x < width; x += 50) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+            }
+
+            // NEW: dynamic horizontal price lines that scroll with camera
+            let priceStep = 100 / scaleY; // draws a line roughly every 100px
+            let startPrice = Math.floor((cameraPrice - height/scaleY) / priceStep) * priceStep;
+            let endPrice = cameraPrice + height/scaleY;
+
+            for(let p = startPrice; p <= endPrice; p += priceStep) {
+                let y = midY - (p - cameraPrice) * scaleY;
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+                
+                // optional: draw subtle price labels on grid
+                ctx.fillStyle = 'rgba(160, 178, 198, 0.2)';
+                ctx.font = '10px monospace';
+                ctx.fillText(p.toFixed(0), 10, y - 5);
+            }
+        }
+
+
+        function render() {
+            ctx.fillStyle = colorBg;
+            ctx.fillRect(0, 0, width, height);
+
+            updateMarket();
+
+            const midY = height / 2;
+            const scaleY = 4;
+
+            drawGrid(midY, scaleY);
+
+            const totalSpacing = candleWidth + candleSpacing;
+            let startX = offset;
+
+            // pass cameraPrice to candles so they draw relative to our view
+            for(let i = 0; i < candles.length; i++) {
+                const x = startX + (i * totalSpacing) + (candleWidth/2);
+                candles[i].draw(x, scaleY, midY, cameraPrice);
+            }
+
+            
+            // FIXED GLITCH ENGINE
+            if (Math.abs(sentiment) > 7 || tickSpeed > 12) {
+                if (Math.random() > 0.5) {
+                    // clamp math so we never pull data from outside canvas bounds
+                    const sliceH = Math.max(1, Math.floor(Math.random() * 50));
+                    const sliceY = Math.max(0, Math.min(height - sliceH, Math.floor(Math.random() * height)));
+                    const shiftX = Math.floor((Math.random() - 0.5) * 40);
+                    
+                    if (sliceH > 0 && sliceY + sliceH <= height) {
+                        const imageData = ctx.getImageData(0, sliceY, width, sliceH);
+                        ctx.putImageData(imageData, shiftX, sliceY);
+                        
+                        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,255,65,0.1)' : 'rgba(255,0,60,0.1)';
+                        ctx.globalCompositeOperation = 'screen';
+                        ctx.fillRect(shiftX, sliceY, width, sliceH);
+                        ctx.globalCompositeOperation = 'source-over';
+                    }
+                }
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        render();
+
+    </script>
+</body>
+
+</html>
