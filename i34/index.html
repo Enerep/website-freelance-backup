@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizontal Portfolio Folio</title>
+    <style>
+        :root {
+            --bg: #0a0a0c;
+            --text: #f0f0f0;
+            --accent: #ff4a00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            overflow: hidden; /* Hide default scrollbars entirely */
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* The container that holds everything in a massive horizontal row */
+        #scroll-container {
+            display: flex;
+            height: 100vh;
+            width: max-content; /* Expands to fit all sections */
+            will-change: transform;
+        }
+
+        section {
+            height: 100vh;
+            width: 100vw; /* Each section takes up exactly one screen width */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+            padding: 5vw;
+        }
+
+        /* Section 1: Hero */
+        .hero h1 {
+            font-size: 15vw;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+            line-height: 0.8;
+            white-space: nowrap;
+            z-index: 2;
+        }
+        .hero span {
+            color: var(--accent);
+            display: block;
+            font-size: 4vw;
+            letter-spacing: 0;
+            margin-top: 20px;
+            font-weight: 400;
+        }
+
+
+
+        /* Section 2 & 3: Projects */
+        .project-card {
+            width: 40vw;
+            height: 60vh;
+            position: relative;
+            overflow: hidden;
+            background: #1a1a1c;
+        }
+
+        .project-card img {
+            width: 120%; /* Wider than container for parallax room */
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            left: -10%;
+            will-change: transform;
+        }
+
+        .project-info {
+            position: absolute;
+            bottom: -10vw;
+            left: 5vw;
+            z-index: 2;
+            mix-blend-mode: difference;
+        }
+
+        .project-info h2 {
+            font-size: 8vw;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        /* Section 4: Contact */
+        .contact h1 {
+            font-size: 10vw;
+            font-weight: 900;
+        }
+        
+        .contact a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 3vw;
+            border-bottom: 4px solid var(--accent);
+        }
+
+        /* Decorative background noise */
+        .grain {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.04;
+            background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <div class="grain"></div>
+
+    <div id="scroll-container">
+        
+        <section class="hero">
+            <h1 class="skew-element">Demo Site<br>DEVELOPER.<span>Scroll to explore.</span></h1>
+        </section>
+
+        <section>
+            <div class="project-info skew-element">
+                <h2>NEON VOID</h2>
+            </div>
+            <div class="project-card skew-element">
+                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2000&auto=format&fit=crop" class="parallax-img" data-speed="0.5" alt="Abstract render">
+            </div>
+        </section>
+
+        <section>
+            <div class="project-info skew-element" style="bottom: 20vh; left: -10vw;">
+                <h2>ECHO SEC</h2>
+            </div>
+            <div class="project-card skew-element">
+                <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop" class="parallax-img" data-speed="0.8" alt="Retro tech">
+            </div>
+        </section>
+
+        <section class="contact">
+            <div class="skew-element">
+                <h1>Demo.</h1>
+                <a href="#">What do you think?</a>
+            </div>
+        </section>
+
+    </div>
+
+
+    <script>
+        const container = document.getElementById('scroll-container');
+        const skewElements = document.querySelectorAll('.skew-element');
+        const parallaxImages = document.querySelectorAll('.parallax-img');
+
+        // Physics variables
+        let targetScroll = 0;
+        let currentScroll = 0;
+        let ease = 0.08; // How floaty/smooth the scroll is (lower = smoother, higher = tighter)
+        let skew = 0;
+
+        // Calculate max scroll distance dynamically
+        let maxScroll = 0;
+        function updateDimensions() {
+            // Total width of container minus the viewport width
+            maxScroll = container.getBoundingClientRect().width - window.innerWidth;
+        }
+        window.addEventListener('resize', updateDimensions);
+        updateDimensions();
+
+        // Intercept standard vertical mouse wheel and trackpads
+        window.addEventListener('wheel', (e) => {
+            // Translate vertical (deltaY) OR horizontal (deltaX) wheel movements into our target
+            targetScroll += e.deltaY + e.deltaX;
+            
+            // Clamp the target so we can't scroll past the ends
+            targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+        });
+
+        // Linear Interpolation function (finds the distance between two points)
+        function lerp(start, end, factor) {
+            return start + (end - start) * factor;
+        }
+
+        // The main animation loop
+        function render() {
+            // Move current scroll slightly towards the target scroll
+            currentScroll = lerp(currentScroll, targetScroll, ease);
+
+            // Calculate velocity (difference between target and current)
+            let velocity = targetScroll - currentScroll;
+
+            // Map velocity to a skew degree (clamped so it doesn't spin out of control)
+            // If we are moving fast, it leans. As we reach the target, velocity drops to 0, and it straightens out.
+            skew = Math.max(-15, Math.min(15, velocity * 0.02));
+
+            // Apply horizontal transform to the massive container
+            container.style.transform = `translate3d(${-currentScroll}px, 0, 0)`;
+
+            // Apply the skew effect to specific typography and cards
+            skewElements.forEach(el => {
+                el.style.transform = `skewX(${skew}deg)`;
+            });
+
+            // Handle the internal image parallax
+            parallaxImages.forEach(img => {
+                const speed = img.getAttribute('data-speed');
+                // Move the image slightly in the opposite direction of the scroll
+                const xPos = currentScroll * speed;
+                img.style.transform = `translate3d(${xPos}px, 0, 0)`;
+            });
+
+            // Loop forever at 60fps
+            requestAnimationFrame(render);
+        }
+
+        // Start the loop
+        render();
+
+    </script>
+</body>
+</html>
