@@ -4,238 +4,524 @@
 
 
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horizontal Portfolio Folio</title>
-    <style>
-        :root {
-            --bg: #0a0a0c;
-            --text: #f0f0f0;
-            --accent: #ff4a00;
-        }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Horizontal Portfolio Demo</title>
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            overflow: hidden; /* Hide default scrollbars entirely */
-            height: 100vh;
-            width: 100vw;
-        }
+  <style>
+    :root {
+      --bg: #08080a;
+      --panel: #151518;
+      --text: #f5f5f5;
+      --muted: #a7a7a7;
+      --accent: #ff4a00;
+      --green: #7CFF8A;
+    }
 
-        /* The container that holds everything in a massive horizontal row */
-        #scroll-container {
-            display: flex;
-            height: 100vh;
-            width: max-content; /* Expands to fit all sections */
-            will-change: transform;
-        }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        section {
-            height: 100vh;
-            width: 100vw; /* Each section takes up exactly one screen width */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            flex-shrink: 0;
-            padding: 5vw;
-        }
+    html {
+      scroll-behavior: auto;
+    }
 
-        /* Section 1: Hero */
-        .hero h1 {
-            font-size: 15vw;
-            font-weight: 900;
-            letter-spacing: -0.05em;
-            text-transform: uppercase;
-            line-height: 0.8;
-            white-space: nowrap;
-            z-index: 2;
-        }
-        .hero span {
-            color: var(--accent);
-            display: block;
-            font-size: 4vw;
-            letter-spacing: 0;
-            margin-top: 20px;
-            font-weight: 400;
-        }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      overflow-x: hidden;
+    }
 
+    body::-webkit-scrollbar {
+      width: 10px;
+    }
 
+    body::-webkit-scrollbar-track {
+      background: #050505;
+    }
 
-        /* Section 2 & 3: Projects */
-        .project-card {
-            width: 40vw;
-            height: 60vh;
-            position: relative;
-            overflow: hidden;
-            background: #1a1a1c;
-        }
+    body::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 999px;
+    }
 
-        .project-card img {
-            width: 120%; /* Wider than container for parallax room */
-            height: 100%;
-            object-fit: cover;
-            position: absolute;
-            left: -10%;
-            will-change: transform;
-        }
+    .grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
 
-        .project-info {
-            position: absolute;
-            bottom: -10vw;
-            left: 5vw;
-            z-index: 2;
-            mix-blend-mode: difference;
-        }
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      width: 0%;
+      background: var(--accent);
+      z-index: 100;
+    }
 
-        .project-info h2 {
-            font-size: 8vw;
-            font-weight: 900;
-            white-space: nowrap;
-        }
+    .hint {
+      position: fixed;
+      right: 28px;
+      bottom: 24px;
+      z-index: 80;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
 
-        /* Section 4: Contact */
-        .contact h1 {
-            font-size: 10vw;
-            font-weight: 900;
-        }
-        
-        .contact a {
-            color: var(--accent);
-            text-decoration: none;
-            font-size: 3vw;
-            border-bottom: 4px solid var(--accent);
-        }
+    #page {
+      position: relative;
+      height: 400vh;
+    }
 
-        /* Decorative background noise */
-        .grain {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none;
-            z-index: 50;
-            opacity: 0.04;
-            background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
-        }
-    </style>
+    #sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #scroll-container {
+      display: flex;
+      height: 100vh;
+      width: max-content;
+      will-change: transform;
+    }
+
+    section {
+      width: 100vw;
+      height: 100vh;
+      flex-shrink: 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5vw;
+      overflow: hidden;
+    }
+
+    .hero {
+      justify-content: flex-start;
+    }
+
+    .hero h1 {
+      font-size: clamp(70px, 14vw, 210px);
+      font-weight: 900;
+      letter-spacing: -0.07em;
+      line-height: 0.82;
+      text-transform: uppercase;
+      transform-origin: left center;
+    }
+
+    .hero span {
+      display: block;
+      color: var(--accent);
+      font-size: clamp(18px, 3vw, 48px);
+      letter-spacing: 0;
+      line-height: 1.1;
+      margin-top: 22px;
+      font-weight: 400;
+      text-transform: none;
+    }
+
+    .big-number {
+      position: absolute;
+      top: 7vh;
+      right: 7vw;
+      font-size: clamp(70px, 12vw, 190px);
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.04);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .project-card {
+      width: min(620px, 46vw);
+      height: min(650px, 64vh);
+      position: relative;
+      overflow: hidden;
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 26px;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+      will-change: transform, opacity;
+    }
+
+    .project-card img {
+      width: 125%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      left: -12.5%;
+      top: 0;
+      filter: saturate(1.15) contrast(1.05);
+      will-change: transform;
+    }
+
+    .project-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,.05));
+    }
+
+    .project-info {
+      position: absolute;
+      z-index: 5;
+      left: 9vw;
+      bottom: 13vh;
+      max-width: 760px;
+      pointer-events: none;
+    }
+
+    .project-info h2 {
+      font-size: clamp(54px, 8vw, 140px);
+      font-weight: 900;
+      letter-spacing: -0.07em;
+      line-height: 0.9;
+      text-transform: uppercase;
+    }
+
+    .project-info p {
+      max-width: 460px;
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: clamp(15px, 1.2vw, 20px);
+      line-height: 1.55;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      color: var(--green);
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .tag::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 22px var(--green);
+    }
+
+    .contact {
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .contact-wrap {
+      width: min(900px, 90vw);
+    }
+
+    .contact h1 {
+      font-size: clamp(64px, 11vw, 170px);
+      font-weight: 900;
+      letter-spacing: -0.07em;
+      line-height: 0.86;
+      text-transform: uppercase;
+    }
+
+    .contact p {
+      color: var(--muted);
+      font-size: clamp(16px, 1.4vw, 24px);
+      line-height: 1.55;
+      margin: 28px 0 36px;
+      max-width: 620px;
+    }
+
+    .contact a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: clamp(22px, 3vw, 46px);
+      font-weight: 800;
+      border-bottom: 4px solid var(--accent);
+      transition: color .25s ease, border-color .25s ease;
+    }
+
+    .contact a:hover {
+      color: var(--accent);
+      border-color: var(--text);
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(45px) scale(0.98);
+      transition: opacity 0.9s ease, transform 0.9s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .float-dot {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: .85;
+      filter: blur(.2px);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .dot-one {
+      top: 18vh;
+      left: 15vw;
+    }
+
+    .dot-two {
+      bottom: 20vh;
+      right: 18vw;
+      background: var(--green);
+      animation-delay: -2s;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translate3d(0, 0, 0);
+      }
+      50% {
+        transform: translate3d(20px, -26px, 0);
+      }
+    }
+
+    @media (max-width: 800px) {
+      #page {
+        height: auto;
+      }
+
+      #sticky {
+        position: relative;
+        height: auto;
+        overflow: visible;
+      }
+
+      #scroll-container {
+        display: block;
+        width: 100%;
+        height: auto;
+        transform: none !important;
+      }
+
+      section {
+        width: 100%;
+        min-height: 100vh;
+        height: auto;
+        padding: 80px 24px;
+      }
+
+      .hero h1,
+      .contact h1 {
+        font-size: 68px;
+      }
+
+      .project-card {
+        width: 88vw;
+        height: 58vh;
+      }
+
+      .project-info {
+        left: 24px;
+        bottom: 80px;
+      }
+
+      .project-info h2 {
+        font-size: 58px;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
 </head>
 
-
 <body>
+  <div class="progress" id="progress"></div>
+  <div class="grain"></div>
+  <div class="hint">Scroll</div>
 
-    <div class="grain"></div>
+  <main id="page">
+    <div id="sticky">
+      <div id="scroll-container">
 
-    <div id="scroll-container">
-        
         <section class="hero">
-            <h1 class="skew-element">Demo Site<br>DEVELOPER.<span>Scroll to explore.</span></h1>
+          <div class="float-dot dot-one"></div>
+          <h1 class="skew-element reveal">
+            Demo Site<br />
+            Developer.
+            <span>Scroll to explore.</span>
+          </h1>
+          <div class="big-number">01</div>
         </section>
 
         <section>
-            <div class="project-info skew-element">
-                <h2>NEON VOID</h2>
-            </div>
-            <div class="project-card skew-element">
-                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2000&auto=format&fit=crop" class="parallax-img" data-speed="0.5" alt="Abstract render">
-            </div>
+          <div class="project-info skew-element reveal">
+            <div class="tag">Featured project</div>
+            <h2>Neon Void</h2>
+            <p>Projects here</p>
+          </div>
+
+          <div class="project-card skew-element reveal">
+            <img
+              src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2000&auto=format&fit=crop"
+              class="parallax-img"
+              data-speed="0.18"
+              alt="Abstract render"
+            />
+          </div>
+          <div class="big-number">02</div>
         </section>
 
         <section>
-            <div class="project-info skew-element" style="bottom: 20vh; left: -10vw;">
-                <h2>ECHO SEC</h2>
-            </div>
-            <div class="project-card skew-element">
-                <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop" class="parallax-img" data-speed="0.8" alt="Retro tech">
-            </div>
+          <div class="project-info skew-element reveal" style="left: 52vw; bottom: 18vh;">
+            <div class="tag">Interface concept</div>
+            <h2>About Sec</h2>
+            <p>Related about you</p>
+          </div>
+
+          <div class="project-card skew-element reveal" style="transform-origin: center;">
+            <img
+              src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop"
+              class="parallax-img"
+              data-speed="0.25"
+              alt="Retro tech"
+            />
+          </div>
+          <div class="float-dot dot-two"></div>
+          <div class="big-number">03</div>
         </section>
 
         <section class="contact">
-            <div class="skew-element">
-                <h1>Demo.</h1>
-                <a href="#">What do you think?</a>
-            </div>
+          <div class="contact-wrap skew-element reveal">
+            <div class="tag">End section</div>
+            <h1>Example portfolio.</h1>
+            <p>This is a clean working version you can paste into one HTML file. No libraries needed.</p>
+            <a href="#">What do you think?</a>
+          </div>
+          <div class="big-number">04</div>
         </section>
 
+      </div>
     </div>
+  </main>
 
+  <script>
+    const page = document.getElementById("page");
+    const sticky = document.getElementById("sticky");
+    const container = document.getElementById("scroll-container");
+    const progress = document.getElementById("progress");
 
-    <script>
-        const container = document.getElementById('scroll-container');
-        const skewElements = document.querySelectorAll('.skew-element');
-        const parallaxImages = document.querySelectorAll('.parallax-img');
+    const skewElements = document.querySelectorAll(".skew-element");
+    const parallaxImages = document.querySelectorAll(".parallax-img");
+    const revealElements = document.querySelectorAll(".reveal");
 
-        // Physics variables
-        let targetScroll = 0;
-        let currentScroll = 0;
-        let ease = 0.08; // How floaty/smooth the scroll is (lower = smoother, higher = tighter)
-        let skew = 0;
+    let targetScroll = 0;
+    let currentScroll = 0;
+    let maxScroll = 0;
+    let ease = 0.075;
 
-        // Calculate max scroll distance dynamically
-        let maxScroll = 0;
-        function updateDimensions() {
-            // Total width of container minus the viewport width
-            maxScroll = container.getBoundingClientRect().width - window.innerWidth;
-        }
-        window.addEventListener('resize', updateDimensions);
-        updateDimensions();
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(value, max));
+    }
 
-        // Intercept standard vertical mouse wheel and trackpads
-        window.addEventListener('wheel', (e) => {
-            // Translate vertical (deltaY) OR horizontal (deltaX) wheel movements into our target
-            targetScroll += e.deltaY + e.deltaX;
-            
-            // Clamp the target so we can't scroll past the ends
-            targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
-        });
+    function lerp(start, end, factor) {
+      return start + (end - start) * factor;
+    }
 
-        // Linear Interpolation function (finds the distance between two points)
-        function lerp(start, end, factor) {
-            return start + (end - start) * factor;
-        }
+    function updateDimensions() {
+      if (window.innerWidth <= 800) {
+        page.style.height = "auto";
+        return;
+      }
 
-        // The main animation loop
-        function render() {
-            // Move current scroll slightly towards the target scroll
-            currentScroll = lerp(currentScroll, targetScroll, ease);
+      maxScroll = container.scrollWidth - window.innerWidth;
+      page.style.height = `${maxScroll + window.innerHeight}px`;
+    }
 
-            // Calculate velocity (difference between target and current)
-            let velocity = targetScroll - currentScroll;
+    function getScrollProgress() {
+      if (window.innerWidth <= 800) {
+        return 0;
+      }
 
-            // Map velocity to a skew degree (clamped so it doesn't spin out of control)
-            // If we are moving fast, it leans. As we reach the target, velocity drops to 0, and it straightens out.
-            skew = Math.max(-15, Math.min(15, velocity * 0.02));
+      const rect = page.getBoundingClientRect();
+      const scrolledInside = clamp(-rect.top, 0, maxScroll);
+      return scrolledInside;
+    }
 
-            // Apply horizontal transform to the massive container
-            container.style.transform = `translate3d(${-currentScroll}px, 0, 0)`;
+    function updateReveal() {
+      revealElements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const visible = rect.left < window.innerWidth * 0.88 && rect.right > window.innerWidth * 0.12;
+        if (visible) el.classList.add("active");
+        else el.classList.remove("active");
+      });
+    }
 
-            // Apply the skew effect to specific typography and cards
-            skewElements.forEach(el => {
-                el.style.transform = `skewX(${skew}deg)`;
-            });
+    function render() {
+      if (window.innerWidth <= 800) {
+        progress.style.width = `${(window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100}%`;
+        updateReveal();
+        requestAnimationFrame(render);
+        return;
+      }
 
-            // Handle the internal image parallax
-            parallaxImages.forEach(img => {
-                const speed = img.getAttribute('data-speed');
-                // Move the image slightly in the opposite direction of the scroll
-                const xPos = currentScroll * speed;
-                img.style.transform = `translate3d(${xPos}px, 0, 0)`;
-            });
+      targetScroll = getScrollProgress();
+      currentScroll = lerp(currentScroll, targetScroll, ease);
 
-            // Loop forever at 60fps
-            requestAnimationFrame(render);
-        }
+      const velocity = targetScroll - currentScroll;
+      const skew = clamp(velocity * 0.018, -12, 12);
 
-        // Start the loop
-        render();
+      container.style.transform = `translate3d(${-currentScroll}px, 0, 0)`;
 
-    </script>
+      skewElements.forEach((el) => {
+        el.style.transform = `skewX(${skew}deg)`;
+      });
+
+      parallaxImages.forEach((img) => {
+        const speed = parseFloat(img.dataset.speed || "0.2");
+        img.style.transform = `translate3d(${currentScroll * speed}px, 0, 0) scale(1.04)`;
+      });
+
+      const percent = maxScroll === 0 ? 0 : (currentScroll / maxScroll) * 100;
+      progress.style.width = `${percent}%`;
+
+      updateReveal();
+      requestAnimationFrame(render);
+    }
+
+    window.addEventListener("resize", updateDimensions);
+    window.addEventListener("load", () => {
+      updateDimensions();
+      updateReveal();
+      requestAnimationFrame(render);
+    });
+  </script>
 </body>
 </html>
