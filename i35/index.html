@@ -1,0 +1,239 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Horizon</title>
+    <style>
+        body { 
+            margin: 0; background: #000; overflow: hidden; 
+            font-family: 'Helvetica Neue', Arial, sans-serif; 
+            cursor: crosshair; user-select: none;
+        }
+        body:active { cursor: grabbing; }
+        
+        #ui {
+            position: absolute; bottom: 40px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.4); font-size: 11px; letter-spacing: 3px;
+            text-transform: uppercase; pointer-events: none;
+            transition: color 0.3s;
+        }
+        h1 {
+            font-size: 2rem; font-weight: 200; letter-spacing: 12px;
+            color: #fff; margin: 0 0 10px 0; text-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+        .accent { 
+            color: #ff5500; font-weight: bold; 
+            text-shadow: 0 0 10px rgba(255,85,0,0.5); transition: all 0.5s; 
+        }
+        
+        /* UI reacts to the click state */
+        body.surge-active #ui .accent { 
+            color: #00e5ff; text-shadow: 0 0 15px rgba(0,229,255,0.8); 
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="cosmos"></canvas>
+
+    <div id="ui">
+        <h1>Event Horizon</h1>
+        Move mouse to orbit | Hold click for <span class="accent">Gravity Surge</span>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('cosmos');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        let w, h, cx, cy;
+
+
+        // Camera / Interaction states
+        let tilt = 0.4; // Initial slight overhead angle
+        let pan = 0;
+        let targetTilt = 0.4;
+        let targetPan = 0;
+        
+        let isSurge = false;
+        let surgeIntensity = 0;
+
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            cx = w / 2;
+            cy = h / 2;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+
+
+        // Mouse tracking for camera rotation
+        window.addEventListener('mousemove', e => {
+            targetTilt = ((e.clientY / h) - 0.5) * Math.PI * 1.2; // -90 to 90 degrees approx
+            targetPan = ((e.clientX / w) - 0.5) * Math.PI * 2;    // Full 360 rotation
+        });
+
+
+
+        // Click tracking for gravity surge
+        const triggerSurge = () => { isSurge = true; document.body.classList.add('surge-active'); };
+        const endSurge = () => { isSurge = false; document.body.classList.remove('surge-active'); };
+        
+        window.addEventListener('mousedown', triggerSurge);
+        window.addEventListener('mouseup', endSurge);
+        window.addEventListener('touchstart', triggerSurge);
+        window.addEventListener('touchend', endSurge);
+
+
+        // Physics constants
+        const numParticles = 10000;
+        const particles = [];
+        const baseEHRadius = 80; // Event Horizon Radius
+        const fov = 800; // 3D Field of View
+
+
+
+        // Generate the accretion disk
+        for(let i = 0; i < numParticles; i++) {
+            // Square distribution concentrates particles densely near the black hole
+            let radius = baseEHRadius + 10 + Math.pow(Math.random(), 2) * 600; 
+            particles.push({
+                r: radius,
+                a: Math.random() * Math.PI * 2, // angle
+                y: (Math.random() - 0.5) * (Math.random() * 15), // vertical thickness
+                s: Math.random() * 1.5 + 0.5 // base size
+            });
+        }
+
+        function render() {
+            // Clear space
+            ctx.fillStyle = '#020203';
+            ctx.fillRect(0, 0, w, h);
+
+            // Smooth camera easing
+            tilt += (targetTilt - tilt) * 0.05;
+            pan += (targetPan - pan) * 0.05;
+
+            // Surge logic (smooth transition 0 to 1)
+            surgeIntensity += (isSurge ? 1 - surgeIntensity : -surgeIntensity) * 0.05;
+            
+            // Dynamic variables based on state
+            const currentEH = baseEHRadius + surgeIntensity * 30 + (Math.random() * surgeIntensity * 3);
+            const baseHue = 25 + surgeIntensity * 165; // Shifts from Orange (25) to Cyan (190)
+
+            // Volumetric ambient glow
+            let gradient = ctx.createRadialGradient(cx, cy, currentEH, cx, cy, currentEH * 5);
+            gradient.addColorStop(0, `hsla(${baseHue}, 100%, 20%, ${0.15 + surgeIntensity * 0.2})`);
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, w, h);
+
+            // Z-sorting arrays
+            let back = [], front = [];
+
+            // Process all particles
+            for(let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                
+                // Keplerian physics: objects closer to the center orbit much faster
+                let speed = 2.5 / Math.sqrt(p.r);
+                if (isSurge) speed *= 2.5; 
+                
+                p.a += speed * 0.05; // Move along orbit
+                
+                // Surge physics: Disk destabilizes and gets sucked inward
+                if (isSurge) {
+                    p.r -= 2;
+                    p.y += (Math.random() - 0.5) * 2; // Violent vertical shaking
+                    if (p.r < currentEH) p.r = baseEHRadius + 500 + Math.random() * 200;
+                } else {
+                    p.y *= 0.98; // Slowly calm down vertical chaos
+                }
+
+                // 1. Calculate base 3D coordinates
+                let x = Math.cos(p.a) * p.r;
+                let z = Math.sin(p.a) * p.r;
+                let y = p.y;
+
+                // 2. Rotate around Y axis (Pan)
+                let x1 = x * Math.cos(pan) - z * Math.sin(pan);
+                let z1 = x * Math.sin(pan) + z * Math.cos(pan);
+
+                // 3. Rotate around X axis (Tilt)
+                let y2 = y * Math.cos(tilt) - z1 * Math.sin(tilt);
+                let z2 = y * Math.sin(tilt) + z1 * Math.cos(tilt);
+
+                // 4. Project 3D onto 2D screen
+                let scale = fov / (fov + z2);
+                let px = cx + x1 * scale;
+                let py = cy + y2 * scale;
+
+                // Relativistic Doppler Beaming calculation
+                // x1 represents position relative to camera. 
+                // Positive x1 means it's coming towards us. Negative means receding.
+                let doppler = x1 / p.r; 
+                let hue = baseHue + doppler * 35; // Shifts toward yellow (coming) or red (going)
+                let lum = 50 + doppler * 40; // Brightens coming towards, darkens going away
+                let alpha = Math.min(1, scale * 1.5);
+
+                let pData = { x: px, y: py, s: Math.max(0.1, p.s * scale), h: hue, l: lum, a: alpha };
+                
+                // If z2 > 0, it's behind the black hole
+                if (z2 > 0) back.push(pData);
+                else front.push(pData);
+            }
+
+
+
+            // Helper to draw a batch of particles
+            function drawPlasma(list) {
+                ctx.globalCompositeOperation = 'lighter';
+                for(let i = 0; i < list.length; i++) {
+                    let p = list[i];
+                    ctx.fillStyle = `hsla(${p.h}, 100%, ${p.l}%, ${p.a})`;
+                    ctx.fillRect(p.x, p.y, p.s, p.s); // fillRect is faster than drawing circles for 10k particles
+                }
+                ctx.globalCompositeOperation = 'source-over';
+            }
+
+
+            // Draw sequence ensures proper 3D occlusion
+            
+
+            
+            // 1. Draw back half of the disk
+            drawPlasma(back);
+
+            // 2. Draw the Black Hole (Event Horizon)
+            ctx.fillStyle = '#000';
+            ctx.shadowBlur = 40 + surgeIntensity * 60;
+            ctx.shadowColor = `hsl(${baseHue}, 100%, 50%)`;
+            ctx.beginPath();
+            ctx.arc(cx, cy, currentEH, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0; // reset shadow
+            
+            // 3. Draw the Photonic Ring (superheated light trapped just outside the horizon)
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 + surgeIntensity * 0.5})`;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(cx, cy, currentEH + 1, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 4. Draw front half of the disk over the black hole
+            drawPlasma(front);
+
+            requestAnimationFrame(render);
+        }
+
+        // Ignite
+        render();
+
+    </script>
+</body>
+</html>
