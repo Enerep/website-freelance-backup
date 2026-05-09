@@ -1,15 +1,22 @@
-
-
-
 <!DOCTYPE html>
 <html lang="en">
-
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmic Portfolio</title>
+    <title>Cosmic Portfolio Pro</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400&display=swap');
+
+        :root {
+            /* Solar System Variables for easy tweaking */
+            --sun-size: 180px;
+            --orbit-1: 300px;
+            --orbit-2: 450px;
+            --orbit-3: 650px;
+            --orbit-4: 850px;
+            --orbit-5: 1050px;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -18,170 +25,144 @@
 
         body {
             overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #000;
+            background: #050011;
             color: #fff;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            width: 100vw;
         }
 
-        /*cosmic background with nebula effect*/
-        .space {
+        /* High-performance Canvas Background */
+        #spaceCanvas {
             position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(ellipse at center, #1a0033 0%, #000000 100%);
             z-index: 1;
         }
 
-        /*animated stars background*/
-        .stars {
+        /* Nebula Overlays */
+        .nebula {
             position: fixed;
-            width: 200%;
-            height: 200%;
-            top: -50%;
-            left: -50%;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
             z-index: 2;
-            animation: rotate 240s linear infinite;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            animation: nebulaPulse 20s ease-in-out infinite alternate;
+        }
+        .nebula-purple { top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #4a00e0 0%, transparent 70%); }
+        .nebula-blue { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #00c6ff 0%, transparent 70%); }
+
+        /* Container for mouse parallax (safely wraps planets without breaking orbits) */
+        #solar-system {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            z-index: 5;
+            transition: transform 0.1s ease-out;
         }
 
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: white;
-            border-radius: 50%;
-            animation: twinkle 3s ease-in-out infinite;
-        }
-
-        /*central sun element*/
+        /* The Sun */
         .sun {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 180px;
-            height: 180px;
-            margin: -90px 0 0 -90px;
-            background: radial-gradient(circle, #fff740 0%, #ff9500 40%, #ff4500 100%);
-            border-radius: 50%;
-            box-shadow: 0 0 60px #ff9500, 0 0 120px #ff4500, 0 0 180px #ff4500;
-            z-index: 10;
-            animation: pulse 4s ease-in-out infinite;
-        }
-
-        /*sun corona effect*/
-        .sun::before {
-            content: '';
             position: absolute;
-            top: -20px;
-            left: -20px;
-            right: -20px;
-            bottom: -20px;
-            background: radial-gradient(circle, rgba(255,149,0,0.4) 0%, transparent 70%);
-            border-radius: 50%;
-            animation: corona 6s linear infinite;
-        }
-
-
-
-        /*orbital paths*/
-        .orbit {
-            position: fixed;
             top: 50%;
             left: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: var(--sun-size);
+            height: var(--sun-size);
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, #fff 0%, #ffdf00 30%, #ff8c00 80%, #ff0000 100%);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 60px #ff9500, 
+                0 0 120px #ff4500, 
+                0 0 200px rgba(255, 69, 0, 0.6),
+                inset 0 0 40px rgba(255, 255, 255, 0.8);
+            animation: sunPulse 4s ease-in-out infinite alternate;
+        }
+
+        /* Orbit Rings */
+        .orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 1px dashed rgba(255, 255, 255, 0.15);
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            z-index: 3;
-            animation: orbitGlow 8s ease-in-out infinite;
+            pointer-events: none;
         }
 
-        /*planets orbiting*/
+        /* Base Planet Styles */
         .planet {
             position: absolute;
             border-radius: 50%;
-            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5);
-            animation: rotate 20s linear infinite;
+            top: 50%;
+            left: 50%;
+            /* 3D Sphere effect using inset shadows */
+            box-shadow: inset -15px -15px 25px rgba(0,0,0,0.7), 0 0 20px rgba(255,255,255,0.2);
         }
 
-        /*earth-like planet*/
+        /* Planet 1: Earth-like */
         .planet1 {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #4a90e2 0%, #2ecc71 50%, #3498db 100%);
-            top: -25px;
-            left: 50%;
-            margin-left: -25px;
-            box-shadow: 0 0 30px rgba(74, 144, 226, 0.8), inset -10px -10px 20px rgba(0,0,0,0.5);
-            animation: orbit1 12s linear infinite;
+            width: 40px; height: 40px;
+            margin-top: -20px; margin-left: -20px;
+            background: radial-gradient(circle at 30% 30%, #4facfe 0%, #00f2fe 100%);
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.6), 0 0 20px rgba(79, 172, 254, 0.6);
+            animation: orbit 10s linear infinite;
         }
 
-
-
-
-        /*mars-like planet*/
+        /* Planet 2: Mars-like */
         .planet2 {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            top: -20px;
-            left: 50%;
-            margin-left: -20px;
-            box-shadow: 0 0 25px rgba(231, 76, 60, 0.8), inset -8px -8px 16px rgba(0,0,0,0.5);
-            animation: orbit2 18s linear infinite;
+            width: 30px; height: 30px;
+            margin-top: -15px; margin-left: -15px;
+            background: radial-gradient(circle at 30% 30%, #fa709a 0%, #fee140 100%);
+            box-shadow: inset -8px -8px 16px rgba(0,0,0,0.6), 0 0 15px rgba(250, 112, 154, 0.6);
+            animation: orbit 16s linear infinite;
         }
 
-        /*jupiter-like planet*/
+        /* Planet 3: Jupiter-like */
         .planet3 {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, #f39c12 0%, #d68910 50%, #ba7506 100%);
-            top: -35px;
-            left: 50%;
-            margin-left: -35px;
-            box-shadow: 0 0 40px rgba(243, 156, 18, 0.8), inset -12px -12px 24px rgba(0,0,0,0.5);
-            animation: orbit3 25s linear infinite;
+            width: 80px; height: 80px;
+            margin-top: -40px; margin-left: -40px;
+            background: repeating-linear-gradient(0deg, #d48e46, #d48e46 10px, #e8c08e 10px, #e8c08e 20px);
+            animation: orbit 24s linear infinite;
         }
 
-
-
-
-        /*saturn-like planet with rings*/
+        /* Planet 4: Saturn-like */
         .planet4 {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #f4d03f 0%, #d4af37 100%);
-            top: -30px;
-            left: 50%;
-            margin-left: -30px;
-            box-shadow: 0 0 35px rgba(244, 208, 63, 0.8), inset -10px -10px 20px rgba(0,0,0,0.5);
-            animation: orbit4 32s linear infinite;
+            width: 60px; height: 60px;
+            margin-top: -30px; margin-left: -30px;
+            background: radial-gradient(circle at 30% 30%, #f6d365 0%, #fda085 100%);
+            animation: orbit 34s linear infinite;
         }
-
+        
+        /* Saturn's Ring */
         .planet4::after {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 100px;
-            height: 20px;
-            margin: -10px 0 0 -50px;
-            border: 3px solid rgba(244, 208, 63, 0.6);
+            top: 50%; left: 50%;
+            width: 130px; height: 30px;
+            transform: translate(-50%, -50%) rotate(25deg);
+            border: 8px solid rgba(246, 211, 101, 0.5);
             border-radius: 50%;
-            transform: rotateX(75deg);
+            box-shadow: 0 0 10px rgba(246, 211, 101, 0.3);
+            pointer-events: none;
         }
 
-        /*purple alien planet*/
+        /* Planet 5: Alien Neon */
         .planet5 {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-            top: -22.5px;
-            left: 50%;
-            margin-left: -22.5px;
-            box-shadow: 0 0 30px rgba(155, 89, 182, 0.8), inset -9px -9px 18px rgba(0,0,0,0.5);
-            animation: orbit5 38s linear infinite;
+            width: 45px; height: 45px;
+            margin-top: -22.5px; margin-left: -22.5px;
+            background: radial-gradient(circle at 30% 30%, #b224ef 0%, #7579ff 100%);
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.7), 0 0 30px rgba(178, 36, 239, 0.8);
+            animation: orbit 45s linear infinite;
         }
 
-        /*content container*/
+        /* UI Content */
         .content {
             position: fixed;
             top: 50%;
@@ -190,289 +171,187 @@
             text-align: center;
             z-index: 100;
             pointer-events: none;
+            width: 100%;
         }
 
         .content h1 {
-            font-size: 4em;
-            font-weight: 700;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(74, 144, 226, 0.6);
-            animation: float 6s ease-in-out infinite;
-            background: linear-gradient(45deg, #fff, #4a90e2, #9b59b6, #e74c3c);
-            background-size: 300% 300%;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 5vw;
+            font-weight: 900;
+            letter-spacing: 8px;
+            background: linear-gradient(to right, #fff, #00f2fe, #b224ef, #fff);
+            background-size: 300% auto;
+            color: transparent;
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: float 6s ease-in-out infinite, gradientShift 8s ease infinite;
+            animation: textShine 5s linear infinite;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            margin-bottom: 10px;
         }
-
-
 
         .content p {
-            font-size: 1.5em;
-            margin-top: 20px;
-            opacity: 0.9;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            animation: float 6s ease-in-out infinite 0.5s;
+            font-size: 1.5rem;
+            color: #a3c2ff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            animation: float 4s ease-in-out infinite;
         }
 
-
-
-        /*shooting stars*/
-        .shooting-star {
-            position: fixed;
-            width: 2px;
-            height: 2px;
-            background: white;
-            border-radius: 50%;
-            box-shadow: 0 0 4px white;
-            z-index: 5;
-            animation: shoot 3s linear infinite;
+        /* Keyframes */
+        @keyframes orbit {
+            from { transform: rotate(0deg) translateX(var(--radius)) rotate(0deg); }
+            to   { transform: rotate(360deg) translateX(var(--radius)) rotate(-360deg); }
         }
 
-
-        /*nebula clouds*/
-        .nebula {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(60px);
-            opacity: 0.3;
-            z-index: 2;
-            animation: nebulaDrift 30s ease-in-out infinite;
+        @keyframes sunPulse {
+            0%   { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+            100% { transform: translate(-50%, -50%) scale(1.05); filter: brightness(1.2); }
         }
 
-        .nebula1 {
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(155, 89, 182, 0.4) 0%, transparent 70%);
-            top: 10%;
-            left: 20%;
-            animation: nebulaDrift 25s ease-in-out infinite;
-        }
-
-        .nebula2 {
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(74, 144, 226, 0.3) 0%, transparent 70%);
-            bottom: 10%;
-            right: 15%;
-            animation: nebulaDrift 35s ease-in-out infinite reverse;
-        }
-
-        .nebula3 {
-            width: 350px;
-            height: 350px;
-            background: radial-gradient(circle, rgba(231, 76, 60, 0.3) 0%, transparent 70%);
-            top: 40%;
-            right: 25%;
-            animation: nebulaDrift 30s ease-in-out infinite 5s;
-        }
-
-        /*particle effects*/
-        .particle {
-            position: fixed;
-            width: 3px;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            z-index: 4;
-            animation: particleFloat 20s linear infinite;
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes orbit1 {
-            from { transform: rotate(0deg) translateX(250px) rotate(0deg); }
-            to { transform: rotate(360deg) translateX(250px) rotate(-360deg); }
-        }
-
-        @keyframes orbit2 {
-            from { transform: rotate(0deg) translateX(380px) rotate(0deg); }
-            to { transform: rotate(360deg) translateX(380px) rotate(-360deg); }
-        }
-
-        @keyframes orbit3 {
-            from { transform: rotate(0deg) translateX(520px) rotate(0deg); }
-            to { transform: rotate(360deg) translateX(520px) rotate(-360deg); }
-        }
-
-        @keyframes orbit4 {
-            from { transform: rotate(0deg) translateX(680px) rotate(0deg); }
-            to { transform: rotate(360deg) translateX(680px) rotate(-360deg); }
-        }
-
-        @keyframes orbit5 {
-            from { transform: rotate(0deg) translateX(820px) rotate(0deg); }
-            to { transform: rotate(360deg) translateX(820px) rotate(-360deg); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 60px #ff9500, 0 0 120px #ff4500, 0 0 180px #ff4500; }
-            50% { transform: scale(1.1); box-shadow: 0 0 80px #ff9500, 0 0 160px #ff4500, 0 0 240px #ff4500; }
-        }
-
-        @keyframes corona {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes twinkle {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
+        @keyframes textShine {
+            to { background-position: 300% center; }
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes shoot {
-            0% {
-                transform: translate(0, 0);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-300px, 300px);
-                opacity: 0;
-            }
-        }
-
-        @keyframes nebulaDrift {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -30px) scale(1.1); }
-            66% { transform: translate(-30px, 30px) scale(0.9); }
-        }
-
-        @keyframes particleFloat {
-            0% {
-                transform: translate(0, 100vh) scale(0);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                transform: translate(100px, -100vh) scale(1);
-                opacity: 0;
-            }
-        }
-
-
-
-        @keyframes orbitGlow {
-            0%, 100% { border-color: rgba(255, 255, 255, 0.1); }
-            50% { border-color: rgba(74, 144, 226, 0.3); }
+        @keyframes nebulaPulse {
+            0% { opacity: 0.3; transform: scale(1); }
+            100% { opacity: 0.6; transform: scale(1.1); }
         }
     </style>
 </head>
 <body>
-    <div class="space"></div>
+
+    <!-- Dynamic HTML5 Canvas Background -->
+    <canvas id="spaceCanvas"></canvas>
     
-    <div class="stars" id="starsContainer"></div>
-    
-    <div class="nebula nebula1"></div>
-    <div class="nebula nebula2"></div>
-    <div class="nebula nebula3"></div>
-    
-    <div class="sun"></div>
-    
-    <div class="orbit" style="width: 500px; height: 500px;">
-        <div class="planet planet1"></div>
+    <!-- Atmospheric Glowing Nebulas -->
+    <div class="nebula nebula-purple"></div>
+    <div class="nebula nebula-blue"></div>
+
+    <!-- Solar System Container (allows parallax without breaking orbits) -->
+    <div id="solar-system">
+        <div class="sun"></div>
+        
+        <!-- Orbits and Planets -->
+        <div class="orbit" style="width: var(--orbit-1); height: var(--orbit-1);"></div>
+        <div class="planet planet1" style="--radius: calc(var(--orbit-1) / 2);"></div>
+        
+        <div class="orbit" style="width: var(--orbit-2); height: var(--orbit-2);"></div>
+        <div class="planet planet2" style="--radius: calc(var(--orbit-2) / 2);"></div>
+        
+        <div class="orbit" style="width: var(--orbit-3); height: var(--orbit-3);"></div>
+        <div class="planet planet3" style="--radius: calc(var(--orbit-3) / 2);"></div>
+        
+        <div class="orbit" style="width: var(--orbit-4); height: var(--orbit-4);"></div>
+        <div class="planet planet4" style="--radius: calc(var(--orbit-4) / 2);"></div>
+        
+        <div class="orbit" style="width: var(--orbit-5); height: var(--orbit-5);"></div>
+        <div class="planet planet5" style="--radius: calc(var(--orbit-5) / 2);"></div>
     </div>
     
-    <div class="orbit" style="width: 760px; height: 760px;">
-        <div class="planet planet2"></div>
-    </div>
-    
-    <div class="orbit" style="width: 1040px; height: 1040px;">
-        <div class="planet planet3"></div>
-    </div>
-    
-    <div class="orbit" style="width: 1360px; height: 1360px;">
-        <div class="planet planet4"></div>
-    </div>
-    
-    <div class="orbit" style="width: 1640px; height: 1640px;">
-        <div class="planet planet5"></div>
-    </div>
-    
+    <!-- Text Overlay -->
     <div class="content">
         <h1>COSMIC CREATOR</h1>
         <p>Exploring the Universe of Possibilities</p>
     </div>
 
     <script>
-        //generate random stars
-        const starsContainer = document.getElementById('starsContainer');
-        for (let i = 0; i < 400; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.top = Math.random() * 100 + '%';
-            star.style.animationDelay = Math.random() * 3 + 's';
-            star.style.opacity = Math.random();
-            starsContainer.appendChild(star);
+        // --- High Performance Canvas Starfield ---
+        const canvas = document.getElementById('spaceCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let stars = [];
+        let comets = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
         }
-        
-        //create shooting stars
-        function createShootingStar() {
-            const star = document.createElement('div');
-            star.className = 'shooting-star';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.top = Math.random() * 50 + '%';
-            star.style.animationDuration = (Math.random() * 2 + 2) + 's';
-            document.body.appendChild(star);
-            
-            setTimeout(() => {
-                star.remove();
-            }, 4000);
-        }
-        
-        //spawn shooting stars regularly
-        setInterval(createShootingStar, 2000);
-        
-        //create floating particles
-        function createParticle() {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
-            particle.style.animationDelay = Math.random() * 5 + 's';
-            document.body.appendChild(particle);
-            
-            setTimeout(() => {
-                particle.remove();
-            }, 25000);
-        }
-        
-        //spawn particles
-        for (let i = 0; i < 50; i++) {
-            setTimeout(createParticle, i * 500);
-        }
-        
-        setInterval(createParticle, 1000);
-        
-        //add mouse parallax effect
-        document.addEventListener('mousemove', (e) => {
-            const x = (e.clientX / window.innerWidth - 0.5) * 20;
-            const y = (e.clientY / window.innerHeight - 0.5) * 20;
-            
-            document.querySelectorAll('.planet').forEach((planet, index) => {
-                const speed = (index + 1) * 0.5;
-                planet.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Create Star objects
+        for(let i = 0; i < 800; i++) {
+            stars.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                radius: Math.random() * 1.5,
+                opacity: Math.random(),
+                speed: Math.random() * 0.05,
+                twinkleSpeed: Math.random() * 0.02
             });
+        }
+
+        // Animation Loop for Canvas
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw & Update Stars
+            stars.forEach(star => {
+                // Twinkle effect
+                star.opacity += star.twinkleSpeed;
+                if(star.opacity > 1 || star.opacity < 0.1) star.twinkleSpeed *= -1;
+                
+                // Slow drift
+                star.x -= star.speed;
+                if(star.x < 0) star.x = width;
+
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.fill();
+            });
+
+            // Randomly generate comets (Shooting Stars)
+            if(Math.random() < 0.01) {
+                comets.push({
+                    x: Math.random() * width,
+                    y: 0,
+                    length: Math.random() * 80 + 20,
+                    speed: Math.random() * 5 + 5,
+                    opacity: 1
+                });
+            }
+
+            // Draw & Update Comets
+            comets.forEach((comet, index) => {
+                comet.x -= comet.speed;
+                comet.y += comet.speed;
+                comet.opacity -= 0.01;
+
+                ctx.beginPath();
+                ctx.moveTo(comet.x, comet.y);
+                ctx.lineTo(comet.x + comet.length, comet.y - comet.length);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${comet.opacity})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                if(comet.opacity <= 0) comets.splice(index, 1);
+            });
+
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+
+        // --- Smooth Mouse Parallax Effect ---
+        const solarSystem = document.getElementById('solar-system');
+        
+        document.addEventListener('mousemove', (e) => {
+            // Calculate mouse position relative to center (-1 to 1)
+            const x = (e.clientX / window.innerWidth - 0.5) * 2;
+            const y = (e.clientY / window.innerHeight - 0.5) * 2;
+            
+            // Apply slight rotation and translation to the whole solar system container
+            // This prevents the CSS animation transforms on the planets from being overridden!
+            solarSystem.style.transform = `translate(calc(-50% + ${x * 40}px), calc(-50% + ${y * 40}px)) rotateX(${-y * 10}deg) rotateY(${x * 10}deg)`;
         });
+        
     </script>
 </body>
 </html>
