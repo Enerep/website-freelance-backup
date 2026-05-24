@@ -1,0 +1,546 @@
+
+
+
+<!DOCTYPE html>
+
+
+
+<html>
+<head>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Permanent+Marker&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --ink:#1a1008;
+  --paper:#fdf8f0;
+  --paper2:#f7f0e3;
+  --red:#e8331a;
+  --blue:#1a52d4;
+  --yellow:#f5c800;
+  --green:#2ab84b;
+  --pink:#e8388a;
+}
+body{
+  background:var(--paper);
+  font-family:'Caveat',cursive;
+  color:var(--ink);
+  overflow-x:hidden;
+  cursor: crosshair;
+}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(180,160,120,0.12) 27px,rgba(180,160,120,0.12) 28px);
+  pointer-events:none;z-index:0;
+}
+
+@keyframes draw{from{stroke-dashoffset:1000}to{stroke-dashoffset:0}}
+@keyframes wobble{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
+@keyframes wiggle{0%,100%{transform:skew(-1deg,0)}50%{transform:skew(1deg,0.5deg)}}
+@keyframes bounce{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+@keyframes stamp{0%{transform:scale(2) rotate(-20deg);opacity:0}60%{transform:scale(0.9) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
+@keyframes jitter{0%,100%{transform:translate(0,0) rotate(0deg)}25%{transform:translate(-1px,1px) rotate(-0.5deg)}75%{transform:translate(1px,-1px) rotate(0.5deg)}}
+@keyframes float-doodle{0%,100%{transform:translateY(0) rotate(var(--r,0deg))}50%{transform:translateY(-8px) rotate(calc(var(--r,0deg) + 5deg))}}
+@keyframes arrow-appear{from{opacity:0;transform:scale(0) rotate(-30deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+@keyframes typewriter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes marker-highlight{from{width:0}to{width:105%}}
+@keyframes shake{0%,100%{transform:rotate(-1deg)}33%{transform:rotate(2deg)}66%{transform:rotate(-0.5deg)}}
+@keyframes pop{0%{transform:scale(0.7) rotate(-5deg);opacity:0}80%{transform:scale(1.08) rotate(1deg)}100%{transform:scale(1) rotate(0deg);opacity:1}}
+
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 32px;
+  background:var(--paper);
+  border-bottom:3px solid var(--ink);
+}
+.nav-logo{
+  font-family:'Permanent Marker',cursive;
+  font-size:1.6rem;color:var(--ink);
+  animation:wobble 3s ease-in-out infinite;
+  display:inline-block;
+}
+.nav-links{display:flex;gap:28px;}
+.nav-links a{
+  font-size:1.1rem;font-weight:600;color:var(--ink);
+  text-decoration:none;position:relative;padding:2px 4px;
+  transition:color 0.2s;
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-2px;left:0;height:2px;
+  background:var(--red);width:0;
+  transition:width 0.25s ease;
+}
+.nav-links a:hover::after{width:100%;}
+.nav-links a:hover{color:var(--red);}
+
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:6rem 2rem 3rem;position:relative;overflow:hidden;
+}
+
+.doodle{position:absolute;pointer-events:none;animation:float-doodle 4s ease-in-out infinite;}
+.d1{top:8%;left:5%;--r:-12deg;animation-delay:0s;}
+.d2{top:15%;right:8%;--r:8deg;animation-delay:1s;}
+.d3{bottom:20%;left:7%;--r:-5deg;animation-delay:0.5s;}
+.d4{bottom:15%;right:5%;--r:15deg;animation-delay:1.5s;}
+.d5{top:40%;left:2%;--r:-20deg;animation-delay:2s;}
+.d6{top:35%;right:3%;--r:10deg;animation-delay:0.7s;}
+
+.hero-label{
+  font-size:1rem;letter-spacing:0.2em;text-transform:uppercase;
+  color:rgba(26,16,8,0.45);margin-bottom:0.5rem;
+  animation:typewriter 0.6s ease both 0.2s;
+}
+.hero-name{
+  font-family:'Permanent Marker',cursive;
+  font-size:clamp(4rem,14vw,9rem);
+  line-height:0.95;text-align:center;
+  animation:wiggle 4s ease-in-out infinite;
+  position:relative;
+  color:var(--ink);
+}
+.hero-name .highlight{
+  position:relative;display:inline-block;color:var(--ink);
+}
+.hero-name .highlight::before{
+  content:'';position:absolute;bottom:4px;left:-3px;
+  height:14px;background:var(--yellow);opacity:0.55;
+  z-index:-1;border-radius:2px;
+  animation:marker-highlight 0.8s ease both 1s;
+}
+
+.hero-role{
+  font-size:clamp(1.4rem,4vw,2.2rem);
+  font-weight:600;color:rgba(26,16,8,0.6);
+  margin-top:0.5rem;text-align:center;
+  animation:typewriter 0.6s ease both 0.6s;
+}
+
+.hand-circle{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+
+.cta-area{
+  display:flex;gap:1.5rem;margin-top:2.5rem;flex-wrap:wrap;justify-content:center;
+  animation:typewriter 0.8s ease both 1s;
+}
+.btn-scribble{
+  font-family:'Permanent Marker',cursive;
+  font-size:1.1rem;padding:12px 32px;
+  border:3px solid var(--ink);background:var(--ink);color:var(--paper);
+  cursor:pointer;position:relative;
+  transform:rotate(-1.5deg);transition:transform 0.2s,background 0.2s,color 0.2s;
+  animation:shake 3s ease-in-out infinite;
+}
+.btn-scribble:hover{
+  background:var(--red);border-color:var(--red);
+  transform:rotate(1deg) scale(1.05);
+}
+.btn-outline{
+  background:transparent;color:var(--ink);
+  transform:rotate(1deg);animation-delay:0.5s;
+}
+.btn-outline:hover{background:var(--yellow);border-color:var(--ink);color:var(--ink);transform:rotate(-1deg) scale(1.05);}
+
+.section{
+  padding:5rem 2rem;max-width:960px;margin:0 auto;position:relative;z-index:1;
+}
+
+.scribble-header{
+  position:relative;display:inline-block;margin-bottom:3rem;
+}
+.scribble-header h2{
+  font-family:'Permanent Marker',cursive;
+  font-size:clamp(2.5rem,6vw,4rem);
+  color:var(--ink);
+}
+.scribble-underline{
+  position:absolute;bottom:-8px;left:0;
+  height:8px;overflow:visible;width:100%;
+}
+
+.cards{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:2rem;
+}
+.card{
+  background:var(--paper2);
+  border:3px solid var(--ink);
+  padding:1.8rem;
+  position:relative;
+  transition:transform 0.2s;
+  animation:pop 0.6s ease both;
+}
+.card:nth-child(1){transform:rotate(-1.5deg);animation-delay:0.1s;}
+.card:nth-child(2){transform:rotate(1deg);animation-delay:0.2s;}
+.card:nth-child(3){transform:rotate(-0.8deg);animation-delay:0.3s;}
+.card:nth-child(4){transform:rotate(2deg);animation-delay:0.4s;}
+.card:hover{transform:rotate(0) scale(1.03)!important;z-index:10;box-shadow:6px 6px 0 var(--ink);}
+
+.card-tag{
+  display:inline-block;
+  font-size:0.8rem;font-weight:700;
+  padding:3px 10px;margin-bottom:0.8rem;
+  border:2px solid currentColor;
+}
+.tag-red{color:var(--red);border-color:var(--red);}
+.tag-blue{color:var(--blue);border-color:var(--blue);}
+.tag-green{color:var(--green);border-color:var(--green);}
+.tag-pink{color:var(--pink);border-color:var(--pink);}
+
+.card h3{
+  font-family:'Permanent Marker',cursive;
+  font-size:1.6rem;margin-bottom:0.5rem;
+}
+.card p{font-size:1rem;line-height:1.6;color:rgba(26,16,8,0.65);}
+
+.sticky{
+  position:absolute;top:-18px;right:16px;
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;
+  animation:bounce 2.5s ease-in-out infinite;
+}
+
+.skills-mess{
+  display:flex;flex-wrap:wrap;gap:14px;padding:1rem 0;
+}
+.skill{
+  font-family:'Permanent Marker',cursive;
+  font-size:1rem;padding:8px 20px;
+  border:3px solid var(--ink);
+  position:relative;
+  cursor:default;
+  transition:transform 0.15s;
+}
+.skill:nth-child(odd){transform:rotate(-2deg);}
+.skill:nth-child(even){transform:rotate(1.5deg);}
+.skill:hover{transform:rotate(0) scale(1.1)!important;z-index:5;}
+.sk-y{background:var(--yellow);}
+.sk-r{background:var(--red);color:#fff;}
+.sk-b{background:var(--blue);color:#fff;}
+.sk-g{background:var(--green);color:#fff;}
+.sk-w{background:var(--paper);}
+.sk-p{background:var(--pink);color:#fff;}
+
+.about-inner{
+  display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;
+}
+@media(max-width:580px){.about-inner{grid-template-columns:1fr;}}
+
+.about-face{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  height:280px;
+}
+
+.about-text p{
+  font-size:1.25rem;line-height:1.7;margin-bottom:1rem;
+  color:rgba(26,16,8,0.8);
+}
+.about-text p strong{
+  font-family:'Permanent Marker',cursive;font-size:1.1em;
+}
+
+.contact-box{
+  border:4px solid var(--ink);
+  padding:3rem;background:var(--ink);color:var(--paper);
+  position:relative;transform:rotate(-0.5deg);
+  text-align:center;
+}
+.contact-box::after{
+  content:'';position:absolute;
+  inset:-8px;border:2px dashed var(--yellow);
+  pointer-events:none;
+}
+.contact-email{
+  font-family:'Permanent Marker',cursive;
+  font-size:clamp(1.5rem,4vw,2.8rem);
+  color:var(--yellow);display:inline-block;
+  animation:wobble 2s ease-in-out infinite;
+}
+.contact-cta{
+  margin-top:1.5rem;font-size:1.1rem;color:rgba(253,248,240,0.65);
+}
+
+.scribble-divider{width:100%;overflow:visible;margin:2rem 0;display:block;}
+
+.annotation{
+  position:absolute;font-family:'Caveat',cursive;
+  font-size:0.95rem;color:rgba(26,16,8,0.5);
+  pointer-events:none;
+}
+
+.stamp{
+  position:absolute;top:-24px;right:-18px;
+  width:80px;height:80px;
+  border:4px solid var(--red);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transform:rotate(18deg);
+  font-family:'Permanent Marker',cursive;
+  font-size:0.68rem;text-align:center;color:var(--red);
+  line-height:1.3;padding:8px;
+  animation:stamp 0.5s cubic-bezier(0.2,1.6,0.4,1) both 1.5s;
+  opacity:0;
+}
+
+footer{
+  text-align:center;padding:2rem;
+  font-size:1rem;color:rgba(26,16,8,0.4);
+  border-top:2px dashed rgba(26,16,8,0.2);
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">N✏️</span>
+  <div class="nav-links">
+    <a href="#work">work</a>
+    <a href="#about">about</a>
+    <a href="#contact">contact</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="doodle d1">
+    <svg width="70" height="70" viewBox="0 0 70 70" fill="none">
+      <path d="M10 35 C10 15, 60 15, 60 35 C60 55, 10 55, 10 35Z" stroke="#1a1008" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M25 25 C30 22, 40 22, 45 25" stroke="#1a1008" stroke-width="2" fill="none"/>
+      <circle cx="26" cy="32" r="4" fill="#1a1008"/>
+      <circle cx="44" cy="32" r="4" fill="#1a1008"/>
+      <path d="M28 45 C32 50 38 50 42 45" stroke="#1a1008" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="doodle d2">
+    <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+      <path d="M30 5 L35 22 L52 22 L38 33 L43 50 L30 40 L17 50 L22 33 L8 22 L25 22Z" stroke="#f5c800" stroke-width="3" fill="#f5c800" opacity="0.7"/>
+    </svg>
+  </div>
+  <div class="doodle d3">
+    <svg width="80" height="50" viewBox="0 0 80 50" fill="none">
+      <path d="M5 25 C10 10, 25 5, 40 25 C55 45, 70 40, 75 25" stroke="#e8331a" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="5" cy="25" r="5" fill="#e8331a"/>
+    </svg>
+  </div>
+  <div class="doodle d4">
+    <svg width="65" height="65" viewBox="0 0 65 65" fill="none">
+      <rect x="10" y="10" width="45" height="45" rx="4" stroke="#1a52d4" stroke-width="2.5" fill="none" transform="rotate(15 32 32)"/>
+      <rect x="18" y="18" width="29" height="29" rx="2" stroke="#1a52d4" stroke-width="2" fill="none" transform="rotate(15 32 32)"/>
+    </svg>
+  </div>
+  <div class="doodle d5">
+    <svg width="55" height="55" viewBox="0 0 55 55" fill="none">
+      <circle cx="27" cy="27" r="22" stroke="#2ab84b" stroke-width="2.5" stroke-dasharray="6 4" fill="none"/>
+      <path d="M15 27 L27 15 L39 27 L27 39Z" stroke="#2ab84b" stroke-width="2" fill="rgba(42,184,75,0.15)"/>
+    </svg>
+  </div>
+  <div class="doodle d6">
+    <svg width="70" height="40" viewBox="0 0 70 40" fill="none">
+      <path d="M5 35 Q20 5, 35 20 Q50 35, 65 5" stroke="#e8388a" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="65" cy="5" r="5" fill="#e8388a"/>
+      <circle cx="5" cy="35" r="5" fill="#e8388a"/>
+    </svg>
+  </div>
+
+  <svg class="hand-circle" width="640" height="220" viewBox="0 0 640 220" fill="none" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;">
+    <ellipse cx="320" cy="110" rx="300" ry="96"
+      stroke="#1a1008" stroke-width="3" fill="none"
+      stroke-dasharray="1900" stroke-dashoffset="1900"
+      style="animation:draw 2s ease-out both 0.8s;stroke-linecap:round;"
+    />
+  </svg>
+
+  <div class="hero-label">Creative Portfolio 2026</div>
+
+  <h1 class="hero-name">
+    YOUR<br><span class="highlight">NAME</span>
+  </h1>
+
+  <div class="hero-role">Designer  Illustrator  Code Wizard </div>
+
+  <div class="annotation" style="bottom:28%;right:10%;transform:rotate(6deg);">
+    <- that's me!
+    <svg width="50" height="40" viewBox="0 0 50 40" fill="none" style="display:block;margin-top:4px;animation:arrow-appear 0.5s ease both 1.4s;opacity:0;">
+      <path d="M5 5 C10 20, 30 30, 45 35" stroke="#1a1008" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="80" stroke-dashoffset="80" style="animation:draw 0.8s ease both 1.4s;"/>
+      <path d="M38 28 L45 35 L35 34" stroke="#1a1008" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="cta-area">
+    <button class="btn-scribble" onclick="document.getElementById('work').scrollIntoView({behavior:'smooth'})">See my stuff ↓</button>
+    <button class="btn-scribble btn-outline" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Hire me!</button>
+  </div>
+
+  <svg style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);animation:bounce 1.5s ease-in-out infinite;" width="30" height="50" viewBox="0 0 30 50" fill="none">
+    <path d="M15 5 L15 40" stroke="#1a1008" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="60" stroke-dashoffset="60" style="animation:draw 1s ease both 1.5s;"/>
+    <path d="M5 30 L15 43 L25 30" stroke="#1a1008" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="40" stroke-dashoffset="40" style="animation:draw 0.5s ease both 2.3s;"/>
+  </svg>
+</div>
+
+<svg class="scribble-divider" height="20" viewBox="0 0 960 20" preserveAspectRatio="none">
+  <path d="M0 10 C60 2, 120 18, 180 10 C240 2, 300 18, 360 10 C420 2, 480 18, 540 10 C600 2, 660 18, 720 10 C780 2, 840 18, 900 10 C930 2, 950 14, 960 10"
+    stroke="#1a1008" stroke-width="2.5" fill="none" stroke-linecap="round"
+    stroke-dasharray="1200" stroke-dashoffset="1200"
+    style="animation:draw 2s ease both 0.5s;"
+  />
+</svg>
+
+<section class="section" id="work">
+  <div class="scribble-header">
+    <h2>My work<span style="color:var(--red)">.</span></h2>
+    <svg class="scribble-underline" height="12" viewBox="0 0 300 12">
+      <path d="M2 8 C40 2, 100 12, 160 6 C220 2, 260 10, 298 6"
+        stroke="#f5c800" stroke-width="6" fill="none" stroke-linecap="round"
+        stroke-dasharray="350" stroke-dashoffset="350"
+        style="animation:draw 1s ease both 0.3s;"
+      />
+    </svg>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="stamp">SOLD OUT!</div>
+      <div class="sticky">I</div>
+      <div class="card-tag tag-red">Branding</div>
+      <h3>Project 1</h3>
+      <p>Short description of what this project is about and what makes it special.</p>
+      <svg style="margin-top:1rem;display:block;" width="100" height="16" viewBox="0 0 100 16">
+        <path d="M2 10 C20 2, 50 14, 80 6 C90 3, 96 10, 98 8" stroke="#e8331a" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="130" stroke-dashoffset="130" style="animation:draw 1s ease both 0.8s;"/>
+      </svg>
+    </div>
+    <div class="card">
+      <div class="sticky">I</div>
+      <div class="card-tag tag-blue">Web Design</div>
+      <h3>Project 2</h3>
+      <p>Short description of what this project is about and what makes it special.</p>
+      <svg style="margin-top:1rem;display:block;" width="100" height="16" viewBox="0 0 100 16">
+        <path d="M2 10 C20 2, 50 14, 80 6 C90 3, 96 10, 98 8" stroke="#1a52d4" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="130" stroke-dashoffset="130" style="animation:draw 1s ease both 1s;"/>
+      </svg>
+    </div>
+    <div class="card">
+      <div class="sticky">I</div>
+      <div class="card-tag tag-green">Illustration</div>
+      <h3>Project 3</h3>
+      <p>Short description of what this project is about and what makes it special.</p>
+      <svg style="margin-top:1rem;display:block;" width="100" height="16" viewBox="0 0 100 16">
+        <path d="M2 10 C20 2, 50 14, 80 6 C90 3, 96 10, 98 8" stroke="#2ab84b" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="130" stroke-dashoffset="130" style="animation:draw 1s ease both 1.2s;"/>
+      </svg>
+    </div>
+    <div class="card">
+      <div class="sticky">I</div>
+      <div class="card-tag tag-pink">Motion</div>
+      <h3>Project 4</h3>
+      <p>Short description of what this project is about and what makes it special.</p>
+      <svg style="margin-top:1rem;display:block;" width="100" height="16" viewBox="0 0 100 16">
+        <path d="M2 10 C20 2, 50 14, 80 6 C90 3, 96 10, 98 8" stroke="#e8388a" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="130" stroke-dashoffset="130" style="animation:draw 1s ease both 1.4s;"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<svg class="scribble-divider" height="24" viewBox="0 0 960 24" preserveAspectRatio="none">
+  <path d="M0 12 L960 12" stroke="#1a1008" stroke-width="1.5" fill="none" stroke-dasharray="8 8"/>
+</svg>
+
+<section class="section" id="about">
+  <div class="scribble-header">
+    <h2>About me<span style="color:var(--blue)">!</span></h2>
+    <svg class="scribble-underline" height="12" viewBox="0 0 260 12">
+      <path d="M2 8 C40 2, 80 12, 130 6 C180 2, 220 10, 258 6"
+        stroke="#1a52d4" stroke-width="6" fill="none" stroke-linecap="round"
+        stroke-dasharray="300" stroke-dashoffset="300"
+        style="animation:draw 1s ease both 0.3s;"
+      />
+    </svg>
+  </div>
+
+  <div class="about-inner">
+    <div class="about-face">
+      <svg width="220" height="260" viewBox="0 0 220 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M70 200 C60 240, 55 255, 50 260" stroke="#1a1008" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="200" stroke-dashoffset="200" style="animation:draw 1.5s ease both 0.5s;"/>
+        <path d="M150 200 C160 240, 165 255, 170 260" stroke="#1a1008" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="200" stroke-dashoffset="200" style="animation:draw 1.5s ease both 0.6s;"/>
+        <path d="M50 140 C45 170, 60 200, 110 205 C160 210, 175 170, 170 140" stroke="#1a1008" stroke-width="3" fill="var(--paper2)" stroke-linecap="round" stroke-dasharray="400" stroke-dashoffset="400" style="animation:draw 1.5s ease both 0.3s;"/>
+        <path d="M75 170 C85 165, 95 175, 105 168 C115 162, 125 172, 145 166" stroke="#1a52d4" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="150" stroke-dashoffset="150" style="animation:draw 1s ease both 1.2s;"/>
+        <path d="M60 145 C30 150, 18 165, 20 185 C22 195, 40 190, 55 185" stroke="#1a1008" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="200" stroke-dashoffset="200" style="animation:draw 1s ease both 0.8s;"/>
+        <path d="M160 145 C190 150, 202 165, 200 185 C198 195, 180 190, 165 185" stroke="#1a1008" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="200" stroke-dashoffset="200" style="animation:draw 1s ease both 0.8s;"/>
+        <ellipse cx="110" cy="95" rx="55" ry="60" stroke="#1a1008" stroke-width="3" fill="var(--paper)" stroke-dasharray="400" stroke-dashoffset="400" style="animation:draw 1.5s ease both 0s;"/>
+        <path d="M56 80 C58 40, 80 20, 110 18 C140 16, 162 38, 165 80" stroke="#1a1008" stroke-width="4" fill="#1a1008" stroke-linecap="round" stroke-dasharray="300" stroke-dashoffset="300" style="animation:draw 1s ease both 1s;"/>
+        <path d="M55 78 C52 70, 54 55, 60 50" stroke="#1a1008" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="60" stroke-dashoffset="60" style="animation:draw 0.5s ease both 1.2s;"/>
+        <circle cx="88" cy="95" r="7" fill="#1a1008"/>
+        <circle cx="132" cy="95" r="7" fill="#1a1008"/>
+        <circle cx="91" cy="92" r="2.5" fill="white"/>
+        <circle cx="135" cy="92" r="2.5" fill="white"/>
+        <path d="M78 82 C82 78, 92 80, 96 83" stroke="#1a1008" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M122 83 C126 80, 136 78, 140 82" stroke="#1a1008" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M88 120 C96 132, 124 132, 132 120" stroke="#1a1008" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="80" stroke-dashoffset="80" style="animation:draw 0.5s ease both 1.7s;"/>
+        <path d="M108 100 C104 110, 106 116, 112 116" stroke="#1a1008" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <ellipse cx="76" cy="115" rx="10" ry="6" fill="#ffb3b3" opacity="0.5"/>
+        <ellipse cx="144" cy="115" rx="10" ry="6" fill="#ffb3b3" opacity="0.5"/>
+      </svg>
+      <div class="annotation" style="bottom:10px;right:-10px;transform:rotate(-8deg);font-size:0.85rem;"> actual me lol</div>
+    </div>
+
+    <div class="about-text">
+      <p>Hi! I'm <strong>NAME</strong> a designer obsessed with making things feel <em>alive</em>.</p>
+      <p>I believe every pixel should have <strong>personality</strong>. Every screen should feel like it was made by a human, not a machine.</p>
+      <p>Based somewhere cool <br>X years doing this.<br>S</p>
+      <div class="skills-mess" style="margin-top:1.5rem;">
+        <span class="skill sk-b">React</span>
+        <span class="skill sk-y">Web Development</span>
+        <span class="skill sk-r">Branding</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<svg class="scribble-divider" height="20" viewBox="0 0 960 20" preserveAspectRatio="none">
+  <path d="M0 10 C80 0, 160 20, 240 10 C320 0, 400 20, 480 10 C560 0, 640 20, 720 10 C800 0, 880 20, 960 10"
+    stroke="#f5c800" stroke-width="4" fill="none" stroke-linecap="round"
+    stroke-dasharray="1400" stroke-dashoffset="1400"
+    style="animation:draw 2.5s ease both 0.5s;"
+  />
+</svg>
+
+<section class="section" id="contact">
+  <div class="scribble-header">
+    <h2>Say hello<span style="color:var(--green)">?</span></h2>
+    <svg class="scribble-underline" height="12" viewBox="0 0 240 12">
+      <path d="M2 8 C40 2, 80 12, 120 6 C160 2, 200 10, 238 6"
+        stroke="#2ab84b" stroke-width="6" fill="none" stroke-linecap="round"
+        stroke-dasharray="280" stroke-dashoffset="280"
+        style="animation:draw 1s ease both 0.3s;"
+      />
+    </svg>
+  </div>
+
+  <div class="contact-box">
+    <p style="font-size:1rem;opacity:0.6;margin-bottom:0.75rem;letter-spacing:0.15em;text-transform:uppercase;">Open for projects Let's make something weird</p>
+    <div class="contact-email">your@email.com</div>
+    <p class="contact-cta">Also on: <strong style="color:var(--yellow);">Instagram</strong> <strong style="color:var(--yellow);">Dribbble</strong> <strong style="color:var(--yellow);">Twitter/X</strong></p>
+    <svg style="position:absolute;top:12px;left:12px;opacity:0.3;" width="40" height="40" viewBox="0 0 40 40" fill="none">
+      <path d="M5 35 L5 5 L35 5" stroke="#fdf8f0" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+    <svg style="position:absolute;bottom:12px;right:12px;opacity:0.3;" width="40" height="40" viewBox="0 0 40 40" fill="none">
+      <path d="M35 5 L35 35 L5 35" stroke="#fdf8f0" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+</section>
+
+
+<script>
+document.querySelectorAll('.card').forEach(c=>{
+  c.addEventListener('mouseenter',()=>c.style.animation='jitter 0.15s linear infinite');
+  c.addEventListener('mouseleave',()=>c.style.animation='');
+});
+document.querySelectorAll('.skill').forEach((s,i)=>{
+  s.addEventListener('mouseenter',()=>{s.style.transform='rotate(0) scale(1.12)';});
+  s.addEventListener('mouseleave',()=>{s.style.transform=i%2===0?'rotate(-2deg)':'rotate(1.5deg)';});
+});
+</script>
+</body>
+</html>
