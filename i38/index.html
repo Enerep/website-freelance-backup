@@ -1,0 +1,220 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cave | Portfolio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none; /* Hide default cursor to use the flashlight */
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #050508;
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+            position: relative;
+        }
+
+        /* Ambient Cave Background Texture */
+        .cave-walls {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, #111116 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, #0d0d12 0%, transparent 50%);
+            opacity: 0.6;
+            z-index: 1;
+        }
+
+        /* Flashlight/Lantern effect tracking the cursor */
+        #flashlight {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            /* Creates a dark mask with a transparent, soft-edged circle in the middle */
+            background: radial-gradient(circle 180px at var(--x, 50%) var(--y, 50%), transparent 100%, rgba(3, 3, 5, 0.98) 100%);
+            z-index: 10;
+            pointer-events: none; /* Allows clicking through the mask */
+        }
+
+        /* Flashlight central glow core */
+        #flashlight::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle 180px at var(--x, 50%) var(--y, 50%), rgba(255, 253, 230, 0.12) 0%, transparent 100%);
+        }
+
+        /* Main Landing Container */
+        .container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+        }
+
+        /* Hidden text revealed only by the light */
+        h1 {
+            color: #f0f0f5;
+            font-size: clamp(3rem, 10vw, 8rem);
+            letter-spacing: 1.5rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(255,255,255,0.2);
+            user-select: none;
+            transition: transform 0.1s ease;
+        }
+
+        .subtitle {
+            color: #555566;
+            font-size: 1rem;
+            letter-spacing: 0.5rem;
+            margin-top: 20px;
+            text-transform: uppercase;
+        }
+
+        /* Bat Animation Styles */
+        .bat {
+            position: absolute;
+            width: 40px;
+            height: 30px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="%23181822"><path d="M32 20c-2-4-6-6-10-6-6 0-12 5-14 12 4-1 9 0 12 3-3 2-5 6-5 10 4-1 9-1 12 2 1-3 3-5 5-7 2 2 4 4 5 7 3-3 8-3 12-2-1-4-3-8-5-10 3-3 8-4 12-3-2-7-8-12-14-12-4 0-8 2-10 6z"/></svg>') no-repeat;
+            background-size: contain;
+            z-index: 8;
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+        }
+
+        /* The chaotic flapping wing animation */
+        @keyframes flap {
+            0% { transform: scaleY(1) translateY(0); }
+            50% { transform: scaleY(-0.4) translateY(-5px); }
+            100% { transform: scaleY(1) translateY(0); }
+        }
+
+        /* The flight path animation */
+        @keyframes flyAway {
+            0% {
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--mx), var(--my)) scale(0.2);
+            }
+        }
+
+        .bat-body {
+            width: 100%;
+            height: 100%;
+            animation: flap 0.15s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cave-walls"></div>
+    <div id="flashlight"></div>
+
+    <div class="container">
+        <h1 id="hero-text">Portfolio</h1>
+        <p class="subtitle">Move your light to disturb the cave</p>
+    </div>
+
+    <script>
+        const flashlight = document.getElementById('flashlight');
+        const heroText = document.getElementById('hero-text');
+        
+        let lastX = 0;
+        let lastY = 0;
+        let batCount = 0;
+        const MAX_BATS = 40; // Keeps performance smooth
+
+        window.addEventListener('mousemove', (e) => {
+            // Update flashlight CSS variables
+            flashlight.style.setProperty('--x', e.clientX + 'px');
+            flashlight.style.setProperty('--y', e.clientY + 'px');
+
+            // Subtle parallax tilt on the header text based on cursor position
+            const distortX = (e.clientX - window.innerWidth / 2) * 0.03;
+            const distortY = (e.clientY - window.innerHeight / 2) * 0.03;
+            heroText.style.transform = `translate(${distortX}px, ${distortY}px)`;
+
+            // Calculate distance moved to spawn bats on swift motions
+            const distance = Math.hypot(e.clientX - lastX, e.clientY - lastY);
+            
+            if (distance > 80 && batCount < MAX_BATS) {
+                spawnBat(e.clientX, e.clientY);
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+        });
+
+        function spawnBat(startX, startY) {
+            batCount++;
+            const bat = document.createElement('div');
+            bat.classList.add('bat');
+            
+            const wingInner = document.createElement('div');
+            wingInner.classList.add('bat-body');
+            bat.appendChild(wingInner);
+
+            // Randomize flight direction coordinates
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * 300 + 200; 
+            const moveX = Math.cos(angle) * distance + 'px';
+            const moveY = Math.sin(angle) * distance - 100 + 'px'; // Tendency to fly upwards
+
+            bat.style.left = startX + 'px';
+            bat.style.top = startY + 'px';
+            bat.style.setProperty('--mx', moveX);
+            bat.style.setProperty('--my', moveY);
+
+            // Give each bat its own chaotic velocity
+            const duration = Math.random() * 0.6 + 0.6;
+            bat.style.animation = `flyAway ${duration}s forwards ease-out`;
+
+            document.body.appendChild(bat);
+
+            // Cleanup after animation completes
+            setTimeout(() => {
+                bat.remove();
+                batCount--;
+            }, duration * 1000);
+        }
+
+        // Initialize flashlight tracking on mobile touch events too
+        window.addEventListener('touchmove', (e) => {
+            if(e.touches.length > 0) {
+                flashlight.style.setProperty('--x', e.touches[0].clientX + 'px');
+                flashlight.style.setProperty('--y', e.touches[0].clientY + 'px');
+            }
+        });
+    </script>
+</body>
+</html>
