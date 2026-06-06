@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuoyu's Requiem | 3D Ocean</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background-color: #000;
+            color: #e0f7fa;
+            font-family: 'Montserrat', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            cursor: grab;
+        }
+
+        body:active {
+            cursor: grabbing;
+        }
+
+        /* 3D Container */
+        #webgl-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Glassmorphism UI Overlay */
+        .ui-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none; /* Let the mouse drag the 3D camera */
+        }
+
+        .glass-card {
+            background: rgba(0, 10, 20, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            padding: 3rem 5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(0, 242, 254, 0.1);
+            animation: floatUI 6s ease-in-out infinite;
+            pointer-events: auto; /* Re-enable clicks for the card */
+            transition: transform 0.4s ease, border-color 0.4s ease;
+        }
+
+        .glass-card:hover {
+            transform: scale(1.02);
+            border-color: rgba(0, 242, 254, 0.5);
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 5rem;
+            font-weight: 700;
+            letter-spacing: 8px;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(180deg, #ffffff 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 10px 40px rgba(0, 242, 254, 0.5);
+        }
+
+        p.subtitle {
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            color: #88c0d0;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+        }
+
+        .epitaph {
+            font-style: italic;
+            color: #a0aec0;
+            font-size: 0.95rem;
+            max-width: 450px;
+            margin: 0 auto 2.5rem auto;
+            line-height: 1.8;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 36px;
+            color: #fff;
+            text-decoration: none;
+            border: 1px solid #00f2fe;
+            border-radius: 30px;
+            background: rgba(0, 242, 254, 0.05);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            background: rgba(0, 242, 254, 0.2);
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.6);
+            text-shadow: 0 0 10px #fff;
+        }
+
+        /* Loading Screen (since 3D assets take a second) */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            color: #00f2fe;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            letter-spacing: 5px;
+            transition: opacity 1s ease;
+        }
+
+        @keyframes floatUI {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div id="loader">WAKING THE DEPTHS...</div>
+
+    <div id="webgl-container"></div>
+
+    <div class="ui-layer">
+        <div class="glass-card">
+            <h1>NUOYU</h1>
+            <p class="subtitle">The Tides Remember</p>
+            <p class="epitaph">"Nuoyu has fallen, descending into the abyssal depths. But from the end of one voyage, a legend ripples outward forever. Drag to explore."</p>
+            <a href="#" class="btn">Explore the Depths</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { Water } from 'three/addons/objects/Water.js';
+        import { Sky } from 'three/addons/objects/Sky.js';
+
+        let container, camera, scene, renderer;
+        let controls, water, sun;
+        let particles;
+
+        init();
+        animate();
+
+        function init() {
+            container = document.getElementById( 'webgl-container' );
+
+            // 1. Scene Setup
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio( window.devicePixelRatio );
+            renderer.setSize( window.innerWidth, window.innerHeight );
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 0.5; // Moody, dark exposure
+            container.appendChild( renderer.domElement );
+
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 1, 20000 );
+            camera.position.set( 30, 30, 100 );
+
+            sun = new THREE.Vector3();
+
+            // 2. Realistic Water Setup
+            const waterGeometry = new THREE.PlaneGeometry( 10000, 10000 );
+
+            water = new Water(
+                waterGeometry,
+                {
+                    textureWidth: 512,
+                    textureHeight: 512,
+                    waterNormals: new THREE.TextureLoader().load( 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@master/examples/textures/waternormals.jpg', function ( texture ) {
+                        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+                        // Fade out loader once texture is ready
+                        document.getElementById('loader').style.opacity = '0';
+                        setTimeout(() => document.getElementById('loader').remove(), 1000);
+                    } ),
+                    sunDirection: new THREE.Vector3(),
+                    sunColor: 0xffffff,
+                    waterColor: 0x000a14, // Deep abyssal blue/black
+                    distortionScale: 3.7,
+                    fog: scene.fog !== undefined
+                }
+            );
+
+            water.rotation.x = - Math.PI / 2;
+            scene.add( water );
+
+            // 3. Dynamic Sky Setup (Twilight)
+            const sky = new Sky();
+            sky.scale.setScalar( 10000 );
+            scene.add( sky );
+
+            const skyUniforms = sky.material.uniforms;
+            skyUniforms[ 'turbidity' ].value = 10;
+            skyUniforms[ 'rayleigh' ].value = 2;
+            skyUniforms[ 'mieCoefficient' ].value = 0.005;
+            skyUniforms[ 'mieDirectionalG' ].value = 0.8;
+
+            const parameters = {
+                elevation: 0.2, // Very low sun for sunset/twilight effect
+                azimuth: 180
+            };
+
+            const pmremGenerator = new THREE.PMREMGenerator( renderer );
+
+            function updateSun() {
+                const phi = THREE.MathUtils.degToRad( 90 - parameters.elevation );
+                const theta = THREE.MathUtils.degToRad( parameters.azimuth );
+
+                sun.setFromSphericalCoords( 1, phi, theta );
+
+                sky.material.uniforms[ 'sunPosition' ].value.copy( sun );
+                water.material.uniforms[ 'sunDirection' ].value.copy( sun ).normalize();
+                
+                scene.environment = pmremGenerator.fromScene( sky ).texture;
+            }
+            updateSun();
+
+            // 4. Bioluminescent Particles (Nuoyu's Ashes/Soul)
+            const particleCount = 2000;
+            const particleGeometry = new THREE.BufferGeometry();
+            const particlePositions = new Float32Array(particleCount * 3);
+
+            for(let i = 0; i < particleCount * 3; i+=3) {
+                // Spread particles widely across the water
+                particlePositions[i] = (Math.random() - 0.5) * 1000; // x
+                particlePositions[i+1] = Math.random() * 200;        // y (height)
+                particlePositions[i+2] = (Math.random() - 0.5) * 1000; // z
+            }
+
+            particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+            
+            const particleMaterial = new THREE.PointsMaterial({
+                color: 0x00f2fe,
+                size: 1.5,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+
+            particles = new THREE.Points(particleGeometry, particleMaterial);
+            scene.add(particles);
+
+            // 5. Orbit Controls (The 360 Camera)
+            controls = new OrbitControls( camera, renderer.domElement );
+            controls.maxPolarAngle = Math.PI * 0.495; // Prevent camera from going underwater
+            controls.target.set( 0, 10, 0 );
+            controls.minDistance = 40.0;
+            controls.maxDistance = 200.0;
+            controls.enableDamping = true; // Smooth inertia
+            controls.dampingFactor = 0.05;
+            controls.update();
+
+            window.addEventListener( 'resize', onWindowResize );
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        }
+
+        function animate() {
+            requestAnimationFrame( animate );
+            render();
+        }
+
+        function render() {
+            const time = performance.now() * 0.001;
+
+            // Animate water ripples
+            water.material.uniforms[ 'time' ].value += 1.0 / 60.0;
+
+            // Animate particles floating up and swaying
+            const positions = particles.geometry.attributes.position.array;
+            for(let i = 0; i < positions.length; i+=3) {
+                positions[i+1] += 0.1; // Float up
+                positions[i] += Math.sin(time + positions[i+2]) * 0.1; // Sway x
+                
+                // Reset to bottom if they go too high
+                if(positions[i+1] > 200) {
+                    positions[i+1] = 0;
+                }
+            }
+            particles.geometry.attributes.position.needsUpdate = true;
+
+            controls.update(); // Required for damping
+            renderer.render( scene, camera );
+        }
+    </script>
+</body>
+</html>
