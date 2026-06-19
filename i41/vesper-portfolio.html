@@ -1,0 +1,679 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VESPER — Creative Developer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --void:#070708;
+    --ghost:#ECEAE2;
+    --violet:#8A5CF6;
+    --acid:#D4FF3D;
+    --chrome:#9aa0a6;
+    --line: rgba(236,234,226,0.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--void);
+    color:var(--ghost);
+    font-family:'Inter',sans-serif;
+    overflow-x:hidden;
+    cursor:none;
+  }
+  ::selection{background:var(--acid);color:#0a0a0a;}
+  a{color:inherit;text-decoration:none;}
+  img{display:block;max-width:100%;}
+
+  .noise{
+    position:fixed;inset:0;z-index:60;pointer-events:none;
+    opacity:0.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  #progress{
+    position:fixed;top:0;left:0;height:2px;background:var(--acid);
+    width:0%;z-index:70;transition:width .05s linear;
+  }
+
+  #cursor-dot, #cursor-ring{
+    position:fixed;top:0;left:0;pointer-events:none;z-index:80;
+    transform:translate(-50%,-50%);border-radius:50%;
+  }
+  #cursor-dot{width:6px;height:6px;background:var(--acid);}
+  #cursor-ring{
+    width:34px;height:34px;border:1px solid rgba(236,234,226,0.55);
+    transition:width .25s ease, height .25s ease, border-color .25s ease, background .25s ease;
+  }
+  #cursor-ring.active{
+    width:64px;height:64px;background:rgba(212,255,61,0.08);border-color:var(--acid);
+  }
+  @media (max-width:860px){
+    body{cursor:auto;}
+    #cursor-dot,#cursor-ring{display:none;}
+  }
+
+  #bg-canvas{
+    position:fixed;inset:0;z-index:0;width:100vw;height:100vh;
+    display:block;transition:opacity 1s ease;
+  }
+
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:28px 5vw;
+    font-family:'Space Mono',monospace;font-size:13px;letter-spacing:0.05em;
+    mix-blend-mode:difference;
+  }
+  nav .logo{font-weight:700;font-size:15px;}
+  nav ul{display:flex;gap:36px;list-style:none;}
+  nav a{position:relative;padding-bottom:4px;}
+  nav a::after{
+    content:'';position:absolute;left:0;bottom:0;width:0%;height:1px;
+    background:var(--ghost);transition:width .3s ease;
+  }
+  nav a:hover::after{width:100%;}
+
+  section{position:relative;z-index:1;}
+
+  .hero{
+    height:100vh;display:flex;flex-direction:column;justify-content:center;
+    padding:0 5vw;position:relative;
+  }
+  .eyebrow{
+    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.18em;
+    color:var(--chrome);text-transform:uppercase;margin-bottom:22px;
+  }
+  .eyebrow::before{content:'◆ ';color:var(--acid);}
+  h1.title{
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:700;
+    font-size:clamp(3.2rem,11vw,9.5rem);
+    line-height:0.92;
+    letter-spacing:-0.02em;
+    mix-blend-mode:difference;
+  }
+  .title .scramble{display:inline-block;}
+  .hero-sub{
+    margin-top:28px;max-width:480px;
+    font-size:1.05rem;font-weight:300;color:var(--chrome);line-height:1.6;
+  }
+  .scroll-cue{
+    position:absolute;bottom:42px;left:5vw;
+    display:flex;align-items:center;gap:12px;
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.12em;
+    color:var(--chrome);
+  }
+  .scroll-cue .bar{width:1px;height:34px;background:var(--line);position:relative;overflow:hidden;}
+  .scroll-cue .bar::after{
+    content:'';position:absolute;top:-100%;left:0;width:100%;height:100%;
+    background:var(--acid);animation:dropline 1.8s infinite ease-in-out;
+  }
+  @keyframes dropline{0%{top:-100%;}100%{top:100%;}}
+
+  .marquee{
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    overflow:hidden;padding:18px 0;background:rgba(7,7,8,0.4);
+  }
+  .marquee-track{display:flex;white-space:nowrap;animation:scroll-left 26s linear infinite;}
+  .marquee-track span{
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:600;
+    font-size:1.4rem;letter-spacing:0.01em;padding:0 2.2rem;color:var(--ghost);
+    display:flex;align-items:center;gap:2.2rem;
+  }
+  .marquee-track span::after{content:'✶';color:var(--violet);}
+  @keyframes scroll-left{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  @media (prefers-reduced-motion:reduce){.marquee-track{animation:none;}}
+
+  .section-head{
+    padding:140px 5vw 60px;display:flex;justify-content:space-between;
+    align-items:flex-end;gap:24px;flex-wrap:wrap;
+  }
+  .section-head h2{
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:700;
+    font-size:clamp(2.4rem,6vw,4.6rem);letter-spacing:-0.01em;
+  }
+  .section-head .eyebrow{margin-bottom:14px;}
+  .section-head p{max-width:300px;color:var(--chrome);font-size:0.92rem;line-height:1.6;}
+
+  .work-grid{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:18px;
+    padding:0 5vw 140px;
+  }
+  .tile{
+    position:relative;border-radius:18px;overflow:hidden;
+    border:1px solid var(--line);
+    padding:28px;display:flex;flex-direction:column;justify-content:flex-end;
+    min-height:300px;
+    background:#0c0c0d;
+    transition:border-color .3s ease;
+    perspective:1000px;
+    will-change:transform;
+  }
+  .tile:hover{border-color:rgba(236,234,226,0.4);}
+  .tile.big{grid-column:span 4;min-height:420px;}
+  .tile.small{grid-column:span 2;}
+  @media (max-width:900px){
+    .work-grid{grid-template-columns:1fr;}
+    .tile.big,.tile.small{grid-column:span 1;}
+  }
+  .tile-glow{
+    position:absolute;inset:0;opacity:0.55;z-index:0;
+    transition:transform .5s ease, opacity .5s ease;
+  }
+  .tile:hover .tile-glow{transform:scale(1.12);opacity:0.8;}
+  .tile-content{position:relative;z-index:2;}
+  .tile-num{
+    font-family:'Space Mono',monospace;font-size:11px;color:var(--chrome);
+    position:absolute;top:24px;left:28px;z-index:2;
+  }
+  .tile-tags{
+    display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;
+  }
+  .tile-tags span{
+    font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.04em;
+    padding:4px 10px;border:1px solid rgba(236,234,226,0.3);border-radius:30px;
+    color:var(--ghost);text-transform:uppercase;
+  }
+  .tile h3{
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:700;
+    font-size:1.7rem;margin-bottom:6px;
+  }
+  .tile .year{font-family:'Space Mono',monospace;font-size:11px;color:var(--chrome);}
+
+  .about{
+    display:grid;grid-template-columns:1.2fr 1fr;gap:60px;
+    padding:0 5vw 140px;
+  }
+  @media (max-width:860px){.about{grid-template-columns:1fr;gap:40px;}}
+  .about-bio{font-size:1.3rem;font-weight:300;line-height:1.55;color:var(--ghost);}
+  .about-bio strong{font-weight:500;color:var(--acid);}
+  .stat-row{
+    display:flex;gap:40px;margin-top:44px;flex-wrap:wrap;
+  }
+  .stat-row div{font-family:'Space Mono',monospace;}
+  .stat-row .num{font-size:2.1rem;color:var(--ghost);font-family:'Bricolage Grotesque',sans-serif;font-weight:700;}
+  .stat-row .lab{font-size:11px;color:var(--chrome);letter-spacing:0.08em;text-transform:uppercase;}
+
+  .skills-list{list-style:none;}
+  .skills-list li{
+    border-top:1px solid var(--line);
+    padding:16px 0;display:flex;justify-content:space-between;
+    font-family:'Space Mono',monospace;font-size:13px;letter-spacing:0.03em;
+  }
+  .skills-list li span:last-child{color:var(--chrome);}
+
+  .contact{
+    min-height:90vh;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:60px 5vw 80px;
+  }
+  .contact .eyebrow{margin-bottom:30px;}
+  .magnetic-link{
+    display:inline-block;
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:700;
+    font-size:clamp(2.6rem,9vw,7rem);line-height:1;letter-spacing:-0.02em;
+    mix-blend-mode:difference;
+    padding:10px 20px;
+  }
+  .contact-sub{margin-top:26px;color:var(--chrome);font-size:0.95rem;max-width:420px;}
+  .social-row{
+    display:flex;gap:34px;margin-top:60px;
+    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+  .social-row a{position:relative;padding-bottom:4px;}
+  .social-row a::after{
+    content:'';position:absolute;left:0;bottom:0;width:0%;height:1px;
+    background:var(--acid);transition:width .3s ease;
+  }
+  .social-row a:hover::after{width:100%;}
+
+  footer{
+    border-top:1px solid var(--line);
+    padding:26px 5vw;display:flex;justify-content:space-between;
+    font-family:'Space Mono',monospace;font-size:11px;color:var(--chrome);
+  }
+
+  .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s ease, transform .8s ease;}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  a:focus-visible, button:focus-visible{outline:1px solid var(--acid);outline-offset:4px;}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div class="noise"></div>
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav>
+  <div class="logo">VESPER<span style="color:var(--acid)">.</span></div>
+  <ul>
+    <li><a href="#work" data-hover>Work</a></li>
+    <li><a href="#about" data-hover>About</a></li>
+    <li><a href="#contact" data-hover>Contact</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="eyebrow">Creative</div>
+  <h1 class="title"><span class="scramble" data-text="VESPER">VESPER</span></h1>
+  <p class="hero-sub">Description here for portfolio</p>
+  <div class="scroll-cue"><div class="bar"></div><span>SCROLL</span></div>
+</section>
+
+<div class="marquee">
+  <div class="marquee-track">
+    <span><span>WEBGL</span><span>SHADERS</span><span>MOTION DESIGN</span><span>THREE.JS</span><span>GENERATIVE ART</span><span>CREATIVE CODE</span></span>
+    <span><span>WEBGL</span><span>SHADERS</span><span>MOTION DESIGN</span><span>THREE.JS</span><span>GENERATIVE ART</span><span>CREATIVE CODE</span></span>
+  </div>
+</div>
+
+<section id="work">
+  <div class="section-head">
+    <div>
+      <div class="eyebrow">Portfolio / 2023 — 2026</div>
+      <h2 class="reveal"><span class="scramble" data-text="Selected work">Selected work</span></h2>
+    </div>
+    <p>A handful of studio collaborations and personal experiments in motion, shader art and interactive design.</p>
+  </div>
+
+  <div class="work-grid">
+    <div class="tile big reveal" data-hover style="--c1:#8A5CF6;--c2:#1a1025;">
+      <div class="tile-glow" style="background:radial-gradient(circle at 30% 20%, var(--c1), var(--c2) 70%)"></div>
+      <div class="tile-num">01</div>
+      <div class="tile-content">
+        <div class="tile-tags"><span>WebGL</span><span>E</span></div>
+        <h3>Liquid Chrome</h3>
+        <div class="year">2026</div>
+      </div>
+    </div>
+
+    <div class="tile small reveal" data-hover style="--c1:#D4FF3D;--c2:#171b08;">
+      <div class="tile-glow" style="background:radial-gradient(circle at 70% 30%, var(--c1), var(--c2) 70%)"></div>
+      <div class="tile-num">02</div>
+      <div class="tile-content">
+        <div class="tile-tags"><span>Three.js</span></div>
+        <h3>Particle Atlas</h3>
+        <div class="year">2025</div>
+      </div>
+    </div>
+
+    <div class="tile small reveal" data-hover style="--c1:#FF5C5C;--c2:#1a0c0c;">
+      <div class="tile-glow" style="background:radial-gradient(circle at 40% 60%, var(--c1), var(--c2) 70%)"></div>
+      <div class="tile-num">03</div>
+      <div class="tile-content">
+        <div class="tile-tags"><span>Shader</span><span>Music</span></div>
+        <h3>Echo</h3>
+        <div class="year">2025</div>
+      </div>
+    </div>
+
+    <div class="tile small reveal" data-hover style="--c1:#3DE0D4;--c2:#08191a;">
+      <div class="tile-glow" style="background:radial-gradient(circle at 60% 40%, var(--c1), var(--c2) 70%)"></div>
+      <div class="tile-num">04</div>
+      <div class="tile-content">
+        <div class="tile-tags"><span>WebGL</span><span>Data</span></div>
+        <h3>Tidal</h3>
+        <div class="year">2024n</div>
+      </div>
+    </div>
+
+    <div class="tile big reveal" data-hover style="--c1:#FF9A3D;--c2:#1a0f08;">
+      <div class="tile-glow" style="background:radial-gradient(circle at 50% 50%, var(--c1), var(--c2) 70%)"></div>
+      <div class="tile-num">05</div>
+      <div class="tile-content">
+        <div class="tile-tags"><span>Raymarching</span><span>Brand</span></div>
+        <h3>Moltenh</h3>
+        <div class="year">2024</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="section-head">
+    <div>
+      <div class="eyebrow">About</div>
+      <h2 class="reveal"><span class="scramble" data-text="Built from code, light & noise">Built from code, light &amp; noise</span></h2>
+    </div>
+  </div>
+  <div class="about">
+    <div class="about-bio reveal">
+      <p>I'm a developer</p>
+      <br>
+      <p>Description here agian. <strong>BAT</strong> here.</p>
+      <div class="stat-row">
+        <div><div class="num">-</div><div class="lab">Years building for the web</div></div>
+        <div><div class="num">-</div><div class="lab">Shipped experiences</div></div>
+      </div>
+    </div>
+    <ul class="skills-list reveal">
+      <li><span>Three.js / WebGL</span><span>Core</span></li>
+      <li><span>Web development</span><span>Core</span></li>
+      <li><span>React &amp; Next.js</span><span>Core</span></li>
+      <li><span>Something</span><span>Daily</span></li>
+      <li><span>Database management</span><span>Often</span></li>
+      <li><span>App development</span><span>Exploring</span></li>
+    </ul>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="contact">
+    <div class="eyebrow">Have a project in mind?</div>
+    <a href="mailto:batochirajil@gmail.com" class="magnetic-link" data-hover data-magnetic>
+      <span class="scramble" data-text="Let's make something">Let's make something</span>
+    </a>
+    <p class="contact-sub">Open for select studio collaborations and direct commissions starting late 2026.</p>
+    <div class="social-row">
+      <a href="#" data-hover>Email</a>
+      <a href="#" data-hover>Instagram</a>
+      <a href="#" data-hover>GitHub</a>
+      <a href="#" data-hover>Twitter</a>
+    </div>
+  </div>
+  <footer>
+    <span>© 2026 Bat</span>
+    <span><a href="#" data-hover>Back to top ↑</a></span>
+  </footer>
+</section>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- WebGL liquid-chrome shader background ---------- */
+  var canvas = document.getElementById('bg-canvas');
+  var renderer, scene, camera, mesh, uniforms;
+  var mouseTarget = {x:0,y:0}, mouseSmooth = {x:0,y:0};
+  var scrollT = 0;
+
+  function initGL(){
+    renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:false});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    scene = new THREE.Scene();
+    camera = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+
+    uniforms = {
+      uTime:{value:0},
+      uResolution:{value:new THREE.Vector2(window.innerWidth, window.innerHeight)},
+      uMouse:{value:new THREE.Vector2(0,0)},
+      uScrollT:{value:0}
+    };
+
+    var geo = new THREE.PlaneBufferGeometry(2,2);
+    var mat = new THREE.ShaderMaterial({
+      uniforms: uniforms,
+      vertexShader: [
+        "varying vec2 vUv;",
+        "void main(){",
+        "  vUv = uv;",
+        "  gl_Position = vec4(position.xy, 0.0, 1.0);",
+        "}"
+      ].join("\n"),
+      fragmentShader: [
+        "precision highp float;",
+        "uniform float uTime;",
+        "uniform vec2 uResolution;",
+        "uniform vec2 uMouse;",
+        "uniform float uScrollT;",
+        "varying vec2 vUv;",
+
+        "float sdSphere(vec3 p, float r){ return length(p) - r; }",
+        "float smin(float a, float b, float k){",
+        "  float h = clamp(0.5 + 0.5*(b-a)/k, 0.0, 1.0);",
+        "  return mix(b,a,h) - k*h*(1.0-h);",
+        "}",
+
+        "float map(vec3 p){",
+        "  float t = uTime * 0.35;",
+        "  float d = sdSphere(p, 1.0);",
+        "  vec3 p2 = p - vec3(sin(t*1.1)*0.7, cos(t*0.9)*0.55, sin(t*0.6)*0.4);",
+        "  d = smin(d, sdSphere(p2, 0.55), 0.7);",
+        "  vec3 mp = vec3(uMouse * 1.5, 0.25);",
+        "  vec3 p3 = p - mp;",
+        "  d = smin(d, sdSphere(p3, 0.42), 0.6);",
+        "  vec3 p4 = p - vec3(-0.8*cos(t*0.5), 0.6*sin(t*0.7), -0.3);",
+        "  float extra = sdSphere(p4, 0.32 * uScrollT);",
+        "  d = smin(d, extra, 0.6);",
+        "  float n = sin(p.x*5.0+t*2.0) * sin(p.y*5.0-t*1.6) * sin(p.z*5.0+t*1.2);",
+        "  d += n * 0.035;",
+        "  return d;",
+        "}",
+
+        "vec3 calcNormal(vec3 p){",
+        "  vec2 e = vec2(0.001,0.0);",
+        "  return normalize(vec3(",
+        "    map(p+e.xyy) - map(p-e.xyy),",
+        "    map(p+e.yxy) - map(p-e.yxy),",
+        "    map(p+e.yyx) - map(p-e.yyx)",
+        "  ));",
+        "}",
+
+        "void main(){",
+        "  vec2 uv = vUv * 2.0 - 1.0;",
+        "  uv.x *= uResolution.x / uResolution.y;",
+        "  vec3 ro = vec3(0.0, 0.0, 3.2);",
+        "  vec3 rd = normalize(vec3(uv, -1.6));",
+
+        "  float t = 0.0; vec3 p; bool hit = false;",
+        "  for(int i=0;i<80;i++){",
+        "    p = ro + rd * t;",
+        "    float d = map(p);",
+        "    if(d < 0.001){ hit = true; break; }",
+        "    t += d * 0.7;",
+        "    if(t > 8.0) break;",
+        "  }",
+
+        "  vec3 col = vec3(0.027,0.027,0.031);",
+        "  col += 0.035 * vec3(0.5,0.32,0.9) * (1.0 - length(uv)*0.5);",
+
+        "  if(hit){",
+        "    vec3 n = calcNormal(p);",
+        "    vec3 viewDir = normalize(ro - p);",
+        "    float fresnel = pow(1.0 - max(dot(n, viewDir), 0.0), 2.5);",
+        "    vec3 lightDir = normalize(vec3(0.6,0.7,0.5));",
+        "    float diff = max(dot(n, lightDir), 0.0);",
+        "    vec3 base = mix(vec3(0.13,0.13,0.16), vec3(0.62,0.59,0.66), diff);",
+        "    vec3 accent = mix(vec3(0.54,0.36,0.96), vec3(0.83,1.0,0.24), 0.5 + 0.5*sin(uTime*0.4 + p.x*2.0));",
+        "    col = base + accent * fresnel * 1.4;",
+        "    vec3 refl = reflect(-viewDir, n);",
+        "    float spec = pow(max(refl.y*0.5+0.5, 0.0), 8.0);",
+        "    col += spec * 0.15;",
+        "  }",
+
+        "  gl_FragColor = vec4(col, 1.0);",
+        "}"
+      ].join("\n")
+    });
+
+    mesh = new THREE.Mesh(geo, mat);
+    scene.add(mesh);
+
+    window.addEventListener('resize', onResize);
+    onResize();
+    requestAnimationFrame(tick);
+  }
+
+  function onResize(){
+    if(!renderer) return;
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+  }
+
+  var startTime = performance.now();
+  function tick(now){
+    var t = (now - startTime) / 1000;
+    uniforms.uTime.value = reduceMotion ? t*0.15 : t;
+    mouseSmooth.x += (mouseTarget.x - mouseSmooth.x) * 0.06;
+    mouseSmooth.y += (mouseTarget.y - mouseSmooth.y) * 0.06;
+    uniforms.uMouse.value.set(mouseSmooth.x, mouseSmooth.y);
+    uniforms.uScrollT.value = scrollT;
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+
+  window.addEventListener('mousemove', function(e){
+    mouseTarget.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseTarget.y = -((e.clientY / window.innerHeight) * 2 - 1);
+  });
+
+  if(window.WebGLRenderingContext){
+    try{ initGL(); }catch(e){ canvas.style.display = 'none'; }
+  } else {
+    canvas.style.display = 'none';
+  }
+
+  /* ---------- scroll progress + canvas opacity by section ---------- */
+  var progressBar = document.getElementById('progress');
+  function onScroll(){
+    var doc = document.documentElement;
+    var scrollableHeight = doc.scrollHeight - window.innerHeight;
+    var pct = scrollableHeight > 0 ? (window.scrollY / scrollableHeight) : 0;
+    progressBar.style.width = (pct*100) + '%';
+    scrollT = pct;
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  var dimSections = document.querySelectorAll('#work, #about');
+  var fullSections = document.querySelectorAll('.hero, #contact');
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        canvas.style.opacity = entry.target.matches('#work, #about') ? '0.22' : '1';
+      }
+    });
+  }, {threshold:0.5});
+  dimSections.forEach(function(s){ io.observe(s); });
+  fullSections.forEach(function(s){ io.observe(s); });
+
+  /* ---------- custom cursor ---------- */
+  var dot = document.getElementById('cursor-dot');
+  var ring = document.getElementById('cursor-ring');
+  var cur = {x:0,y:0}, ringPos = {x:0,y:0};
+  window.addEventListener('mousemove', function(e){
+    cur.x = e.clientX; cur.y = e.clientY;
+    dot.style.left = cur.x + 'px';
+    dot.style.top = cur.y + 'px';
+  });
+  function ringLoop(){
+    ringPos.x += (cur.x - ringPos.x) * 0.18;
+    ringPos.y += (cur.y - ringPos.y) * 0.18;
+    ring.style.left = ringPos.x + 'px';
+    ring.style.top = ringPos.y + 'px';
+    requestAnimationFrame(ringLoop);
+  }
+  ringLoop();
+  document.querySelectorAll('[data-hover]').forEach(function(el){
+    el.addEventListener('mouseenter', function(){ ring.classList.add('active'); });
+    el.addEventListener('mouseleave', function(){ ring.classList.remove('active'); });
+  });
+
+  /* ---------- magnetic elements ---------- */
+  if(!reduceMotion){
+    document.querySelectorAll('[data-magnetic]').forEach(function(el){
+      el.addEventListener('mousemove', function(e){
+        var r = el.getBoundingClientRect();
+        var relX = e.clientX - (r.left + r.width/2);
+        var relY = e.clientY - (r.top + r.height/2);
+        el.style.transform = 'translate(' + relX*0.22 + 'px,' + relY*0.3 + 'px)';
+      });
+      el.addEventListener('mouseleave', function(){
+        el.style.transition = 'transform .4s ease';
+        el.style.transform = 'translate(0,0)';
+        setTimeout(function(){ el.style.transition = ''; }, 400);
+      });
+    });
+  }
+
+  /* ---------- tilt project tiles ---------- */
+  if(!reduceMotion){
+    document.querySelectorAll('.tile').forEach(function(tile){
+      tile.addEventListener('mousemove', function(e){
+        var r = tile.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - 0.5;
+        var py = (e.clientY - r.top) / r.height - 0.5;
+        tile.style.transform = 'rotateX(' + (-py*8) + 'deg) rotateY(' + (px*10) + 'deg) translateY(-4px)';
+      });
+      tile.addEventListener('mouseleave', function(){
+        tile.style.transition = 'transform .5s ease';
+        tile.style.transform = 'rotateX(0) rotateY(0) translateY(0)';
+        setTimeout(function(){ tile.style.transition = ''; }, 500);
+      });
+    });
+  }
+
+  /* ---------- scroll reveal ---------- */
+  var revealObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){ entry.target.classList.add('in'); }
+    });
+  }, {threshold:0.15});
+  document.querySelectorAll('.reveal').forEach(function(el){ revealObserver.observe(el); });
+
+
+
+  /* ---------- text scramble ---------- */
+  var CHARS = "!<>-_\\/[]{}—=+*^?#________";
+  function scramble(el){
+    var target = el.getAttribute('data-text');
+    var len = target.length;
+    var frame = 0;
+    var maxFrames = 18;
+    var interval = setInterval(function(){
+      var out = '';
+      for(var i=0;i<len;i++){
+        if(i < (frame/maxFrames)*len){
+          out += target[i];
+        } else {
+          out += target[i] === ' ' ? ' ' : CHARS[Math.floor(Math.random()*CHARS.length)];
+        }
+      }
+      el.textContent = out;
+      frame++;
+      if(frame > maxFrames){
+        el.textContent = target;
+        clearInterval(interval);
+      }
+    }, 35);
+  }
+
+
+
+  var scrambleEls = document.querySelectorAll('.scramble');
+  if(reduceMotion){
+    scrambleEls.forEach(function(el){ el.textContent = el.getAttribute('data-text'); });
+  } else {
+    var scrambleObserver = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          scramble(entry.target);
+          scrambleObserver.unobserve(entry.target);
+        }
+      });
+    }, {threshold:0.4});
+    scrambleEls.forEach(function(el){ scrambleObserver.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>
